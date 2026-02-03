@@ -1,7 +1,5 @@
-import { ohnana, printStartup } from './src'
+import { ohnana } from './src'
 import { requestId, logger, cors, errorHandler } from './src/plugins'
-
-const startTime = Date.now()
 
 const app = ohnana({
   plugins: [
@@ -27,7 +25,4 @@ app.get('/error', () => {
   throw new Error('Test error')
 })
 
-const port = 3000
-printStartup({ port, pluginCount: 4, startTime })
-
-export default { port, fetch: app.fetch }
+export default app.serve({ port: 3000 })

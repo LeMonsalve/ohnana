@@ -54,10 +54,8 @@ async function createProject(projectPath: string, projectName: string) {
 }
 
 function getIndexTemplate(): string {
-  return `import { ohnana, printStartup } from 'ohnana'
+  return `import { ohnana } from 'ohnana'
 import { requestId, logger, cors, errorHandler } from 'ohnana/plugins'
-
-const startTime = Date.now()
 
 const app = ohnana({
   plugins: [
@@ -79,13 +77,7 @@ app.get('/health', (c) => {
   return c.json({ status: 'ok' })
 })
 
-const port = 3000
-printStartup({ port, pluginCount: 4, startTime })
-
-export default {
-  port,
-  fetch: app.fetch,
-}
+export default app.serve({ port: 3000 })
 `
 }
 

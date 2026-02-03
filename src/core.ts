@@ -1,17 +1,46 @@
 import { Hono } from "hono";
 import type { OhnanaConfig, PluginInstance, InferContext } from "./types";
+import { printStartup } from "./banner";
+
+export interface ServeOptions {
+  port: number;
+}
+
+export interface ServeResult {
+  port: number;
+  fetch: (request: Request) => Response | Promise<Response>;
+}
 
 export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly []> extends Hono<{
   Variables: InferContext<TPlugins>;
 }> {
   private plugins: readonly PluginInstance<any>[];
+  private readonly startTime: number;
 
   constructor(config: OhnanaConfig<TPlugins>) {
     super(config.basePath ? { strict: false } : undefined);
 
+    this.startTime = Date.now();
     this.plugins = config.plugins || ([] as const);
 
     this.registerPlugins();
+  }
+
+  get pluginCount(): number {
+    return this.plugins.length;
+  }
+
+  serve(options: ServeOptions): ServeResult {
+    printStartup({
+      port: options.port,
+      pluginCount: this.pluginCount,
+      startTime: this.startTime,
+    });
+
+    return {
+      port: options.port,
+      fetch: this.fetch,
+    };
   }
 
   private registerPlugins(): void {
