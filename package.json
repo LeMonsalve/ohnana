@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "description": "A meta-framework for Hono with plugin system and TypeScript inference",
+  "bin": {
+    "uhono": "./src/cli/index.ts"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./plugins": "./src/plugins/index.ts",
