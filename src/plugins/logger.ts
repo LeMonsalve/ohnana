@@ -52,20 +52,51 @@ function prefix(): string {
   return `${colors.magenta}[Ohnana]${colors.reset}`
 }
 
+export interface Logger {
+  debug(message: string, meta?: Record<string, unknown>): void
+  info(message: string, meta?: Record<string, unknown>): void
+  warn(message: string, meta?: Record<string, unknown>): void
+  error(message: string, meta?: Record<string, unknown>): void
+}
+
+function createLogger(requestId?: string): Logger {
+  const log = (level: string, message: string, meta?: Record<string, unknown>) => {
+    const entry = {
+      level,
+      message,
+      ...(requestId && { requestId }),
+      ...meta,
+      timestamp: new Date().toISOString()
+    }
+    console.log(JSON.stringify(entry))
+  }
+  
+  return {
+    debug: (msg, meta) => log('debug', msg, meta),
+    info: (msg, meta) => log('info', msg, meta),
+    warn: (msg, meta) => log('warn', msg, meta),
+    error: (msg, meta) => log('error', msg, meta),
+  }
+}
+
 export interface LoggerConfig {
   skip?: (path: string) => boolean
 }
 
 export const logger = definePlugin({
   id: 'logger',
+  context: {} as { logger: Logger },
 
   onRequest: async (c, next) => {
+    const requestId = (c as any).get('requestId')
+    ;(c as any).set('logger', createLogger(requestId))
+    
     const start = Date.now()
     await next()
     const ms = Date.now() - start
-    const status = c.res.status
-    const method = c.req.method
-    const path = c.req.path
+    const status = (c as any).res.status
+    const method = (c as any).req.method
+    const path = (c as any).req.path
 
     const icon = getStatusIcon(status)
     const statusColor = getStatusColor(status)
@@ -75,3 +106,7 @@ export const logger = definePlugin({
     )
   },
 })
+
+export { createLogger }
+
+export const globalLogger = createLogger()
