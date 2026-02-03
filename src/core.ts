@@ -1,9 +1,21 @@
 import { Hono } from "hono";
-import type { OhnanaConfig, PluginInstance, InferContext } from "./types";
+import type { OhnanaConfig, PluginInstance, InferContext, WebSocketData } from "./types";
 import { printStartup } from "./banner";
 
 export interface ServeOptions {
   port: number;
+  /** WebSocket configuration (optional) */
+  websocket?: {
+    /** WebSocket handlers from Bun */
+    handlers: {
+      open?: (ws: any) => void;
+      message?: (ws: any, message: string | Buffer) => void;
+      close?: (ws: any) => void;
+      error?: (ws: any, error: Error) => void;
+    };
+    /** Path to upgrade to WebSocket (default: '/ws') */
+    path?: string;
+  };
 }
 
 const colors = {
@@ -99,9 +111,31 @@ export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly [
       startTime: this.startTime,
     });
 
-    const server = Bun.serve({
+    const wsPath = options.websocket?.path ?? '/ws';
+    const honoFetch = this.fetch.bind(this);
+    const wsHandlers = options.websocket?.handlers;
+
+    const server = Bun.serve<WebSocketData>({
       port: options.port,
-      fetch: this.fetch,
+      fetch: options.websocket 
+        ? (req, server) => {
+            // Check if this is a WebSocket upgrade request
+            const url = new URL(req.url);
+            if (url.pathname === wsPath && req.headers.get('upgrade') === 'websocket') {
+              const id = crypto.randomUUID();
+              const upgraded = server.upgrade(req, { data: { id, rooms: new Set<string>() } });
+              if (upgraded) return undefined;
+              return new Response('WebSocket upgrade failed', { status: 400 });
+            }
+            // Regular HTTP request - delegate to Hono
+            return honoFetch(req);
+          }
+        : this.fetch,
+      websocket: wsHandlers ? {
+        open: wsHandlers.open,
+        message: wsHandlers.message as any,
+        close: wsHandlers.close,
+      } : undefined as any,
     });
 
     // Graceful shutdown handler
