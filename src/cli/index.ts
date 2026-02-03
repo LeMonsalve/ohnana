@@ -54,18 +54,24 @@ async function createProject(projectPath: string, projectName: string) {
 }
 
 function getIndexTemplate(): string {
-  return `import { Hono } from 'hono'
-import { logger } from 'hono/logger'
-import { cors } from 'hono/cors'
+  return `import { ohnana, printStartup } from 'ohnana'
+import { requestId, logger, cors, errorHandler } from 'ohnana/plugins'
 
-const app = new Hono()
+const startTime = Date.now()
 
-app.use('*', logger())
-app.use('*', cors())
+const app = ohnana({
+  plugins: [
+    requestId(),
+    logger(),
+    errorHandler(),
+    cors(),
+  ]
+})
 
 app.get('/', (c) => {
   return c.json({ 
-    message: 'Hello from Hono!'
+    message: 'Hello from Ohnana!',
+    requestId: c.get('requestId')
   })
 })
 
@@ -73,8 +79,11 @@ app.get('/health', (c) => {
   return c.json({ status: 'ok' })
 })
 
+const port = 3000
+printStartup({ port, pluginCount: 4, startTime })
+
 export default {
-  port: 3000,
+  port,
   fetch: app.fetch,
 }
 `
@@ -108,9 +117,8 @@ function getPackageJsonTemplate(projectName: string): string {
       typecheck: 'tsc --noEmit'
     },
     dependencies: {
-      hono: 'latest',
-      '@t3-oss/env-core': 'latest',
-      zod: 'latest'
+      ohnana: 'latest',
+      hono: 'latest'
     },
     devDependencies: {
       '@types/bun': 'latest',
@@ -149,7 +157,7 @@ dist/
 function getReadmeTemplate(projectName: string): string {
   return `# ${projectName}
 
-A Hono project created with Ohnana CLI.
+An Ohnana project - a meta-framework for Hono with plugin system.
 
 ## Getting Started
 
@@ -164,7 +172,7 @@ Visit http://localhost:3000
 
 \`\`\`
 src/
-├── index.ts          # Main app
+├── index.ts          # Main app with Ohnana plugins
 ├── routes/           # Route handlers
 ├── middlewares/      # Custom middlewares
 ├── lib/              # Shared utilities
@@ -176,5 +184,11 @@ src/
 - \`bun run dev\` - Start development server with hot reload
 - \`bun run start\` - Start production server
 - \`bun run typecheck\` - Type check without building
+
+## Built with Ohnana
+
+- 🔌 Plugin system with 5 lifecycle hooks
+- 🎯 Full TypeScript type inference
+- 📦 Built-in plugins: requestId, logger, cors, errorHandler
 `
 }
