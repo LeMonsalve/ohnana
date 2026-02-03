@@ -30,15 +30,20 @@ describe('Ohnana', () => {
     return c.json({ created: body }, 201)
   })
   
-  // Route group with auth plugin
+  // Route group with auth plugin - use type assertion for group context
   app.group('/api', [auth()], (api) => {
-    api.get('/me', (c) => {
+    api.get('/me', (c: any) => {
       const userId = c.get('userId')
       if (!userId) {
         return c.json({ error: 'Unauthorized' }, 401)
       }
       return c.json({ userId })
     })
+  })
+  
+  // Route group without plugins
+  app.group('/v2', (v2) => {
+    v2.get('/status', (c) => c.json({ version: 2 }))
   })
 
   const client = createTestClient(app)
@@ -77,6 +82,13 @@ describe('Ohnana', () => {
     expect(res.status).toBe(200)
     const data = await res.json<{ userId: string }>()
     expect(data.userId).toBe('user-123')
+  })
+  
+  test('GET /v2/status returns version (group without plugins)', async () => {
+    const res = await client.get('/v2/status')
+    expect(res.status).toBe(200)
+    const data = await res.json<{ version: number }>()
+    expect(data.version).toBe(2)
   })
 })
 

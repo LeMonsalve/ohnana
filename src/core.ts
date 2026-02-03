@@ -35,8 +35,18 @@ export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly [
   }
 
   /**
-   * Create a route group with additional plugins
-   * Plugins in the group only apply to routes within the group
+   * Create a route group with optional additional plugins
+   * 
+   * @example
+   * // With plugins
+   * app.group('/api', [auth()], (api) => {
+   *   api.get('/me', (c) => c.json({ userId: c.get('userId') }))
+   * })
+   * 
+   * // Without plugins (just grouping)
+   * app.group('/admin', (admin) => {
+   *   admin.get('/stats', (c) => c.json({ stats: [] }))
+   * })
    */
   group<TGroupPlugins extends readonly PluginInstance<any>[]>(
     basePath: string,
@@ -44,10 +54,24 @@ export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly [
     configure: (
       group: Hono<{ Variables: InferContext<TPlugins> & InferContext<TGroupPlugins> }>
     ) => void
+  ): this;
+  group(
+    basePath: string,
+    configure: (
+      group: Hono<{ Variables: InferContext<TPlugins> }>
+    ) => void
+  ): this;
+  group(
+    basePath: string,
+    pluginsOrConfigure: readonly PluginInstance<any>[] | ((group: any) => void),
+    maybeConfigure?: (group: any) => void
   ): this {
-    const subApp = new Hono<{ 
-      Variables: InferContext<TPlugins> & InferContext<TGroupPlugins> 
-    }>();
+    // Determine if second arg is plugins array or configure function
+    const isPluginsArray = Array.isArray(pluginsOrConfigure);
+    const plugins = isPluginsArray ? pluginsOrConfigure : [];
+    const configFn = isPluginsArray ? maybeConfigure! : pluginsOrConfigure as (group: any) => void;
+    
+    const subApp = new Hono();
     
     // Register group plugins as middlewares
     for (const plugin of plugins) {
@@ -60,7 +84,7 @@ export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly [
     }
     
     // Let user configure routes
-    configure(subApp);
+    configFn(subApp);
     
     // Mount sub-app at basePath
     this.route(basePath, subApp);
@@ -84,10 +108,8 @@ export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly [
     const shutdown = async (signal: string) => {
       console.log(`\n${colors.magenta}[Ohnana]${colors.reset} ${colors.yellow}${signal}${colors.reset} received, shutting down...`);
       
-      // Stop accepting new connections
       server.stop();
       
-      // Call onShutdown hooks in reverse order (last registered, first to cleanup)
       const reversedPlugins = [...this.plugins].reverse();
       for (const plugin of reversedPlugins) {
         if (plugin.hooks.onShutdown) {
@@ -110,9 +132,6 @@ export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly [
     return server;
   }
 
-  /**
-   * Validate that all plugin dependencies are satisfied
-   */
   private validateDependencies(): void {
     const registeredIds = new Set(this.plugins.map(p => p.id));
     
