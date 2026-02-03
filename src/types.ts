@@ -46,7 +46,7 @@ export interface PluginInstance<TContext extends Record<string, unknown> = {}> {
 /**
  * UHono config - constructor options
  */
-export interface UHonoConfig<TPlugins extends PluginInstance<any>[] = []> {
+export interface UHonoConfig<TPlugins extends readonly PluginInstance<any>[] = readonly []> {
   plugins?: TPlugins;
   basePath?: string;
 }
@@ -76,7 +76,7 @@ export const ErrorCodes = {
 /**
  * Infer combined context from all plugins
  */
-export type InferContext<TPlugins extends PluginInstance<any>[]> = 
-  TPlugins extends [infer First extends PluginInstance<any>, ...infer Rest extends PluginInstance<any>[]]
-    ? First['_context'] & InferContext<Rest>
+export type InferContext<TPlugins extends readonly PluginInstance<any>[]> = 
+  TPlugins extends readonly [infer First, ...infer Rest]
+    ? (First extends PluginInstance<infer C> ? C : {}) & (Rest extends readonly PluginInstance<any>[] ? InferContext<Rest> : {})
     : {};

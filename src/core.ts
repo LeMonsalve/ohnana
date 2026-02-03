@@ -1,16 +1,16 @@
-import { Hono } from 'hono'
-import type { UHonoConfig, PluginInstance, InferContext } from './types'
+import { Hono } from "hono";
+import type { UHonoConfig, PluginInstance, InferContext } from "./types";
 
-export class UHono<TPlugins extends PluginInstance<any>[] = []> extends Hono<{
-  Variables: InferContext<TPlugins>
+export class UHono<TPlugins extends readonly PluginInstance<any>[] = readonly []> extends Hono<{
+  Variables: InferContext<TPlugins>;
 }> {
-  private plugins: TPlugins;
+  private plugins: readonly PluginInstance<any>[];
 
-  constructor(config: UHonoConfig<TPlugins> = {}) {
+  constructor(config: UHonoConfig<TPlugins> = {} as UHonoConfig<TPlugins>) {
     super(config.basePath ? { strict: false } : undefined);
-    
-    this.plugins = (config.plugins || []) as TPlugins;
-    
+
+    this.plugins = (config.plugins || []) as readonly PluginInstance<any>[];
+
     this.registerPlugins();
   }
 
@@ -19,19 +19,17 @@ export class UHono<TPlugins extends PluginInstance<any>[] = []> extends Hono<{
       if (plugin.hooks.onInit) {
         plugin.hooks.onInit(this);
       }
-      
+
       if (plugin.hooks.onRequest) {
-        this.use('*', plugin.hooks.onRequest as any);
+        this.use("*", plugin.hooks.onRequest as any);
       }
     }
-    
-    if (this.plugins.some(p => p.hooks.onError)) {
+
+    if (this.plugins.some((p) => p.hooks.onError)) {
       this.onError((err, c) => {
         for (const plugin of this.plugins) {
-          if (plugin.hooks.onError) {
-            const result = plugin.hooks.onError(err, c as any);
-            if (result) return result;
-          }
+          const result = plugin.hooks?.onError?.(err, c as any);
+          if (result) return result;
         }
         throw err;
       });
