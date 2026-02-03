@@ -6,11 +6,6 @@ export interface ServeOptions {
   port: number;
 }
 
-export interface ServeResult {
-  port: number;
-  fetch: (request: Request) => Response | Promise<Response>;
-}
-
 export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly []> extends Hono<{
   Variables: InferContext<TPlugins>;
 }> {
@@ -30,17 +25,17 @@ export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly [
     return this.plugins.length;
   }
 
-  serve(options: ServeOptions): ServeResult {
+  serve(options: ServeOptions) {
     printStartup({
       port: options.port,
       pluginCount: this.pluginCount,
       startTime: this.startTime,
     });
 
-    return {
+    return Bun.serve({
       port: options.port,
       fetch: this.fetch,
-    };
+    });
   }
 
   private registerPlugins(): void {

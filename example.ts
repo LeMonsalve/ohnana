@@ -25,4 +25,4 @@ app.get('/error', () => {
   throw new Error('Test error')
 })
 
-export default app.serve({ port: 3000 })
+app.serve({ port: 3000 })

@@ -77,7 +77,7 @@ app.get('/health', (c) => {
   return c.json({ status: 'ok' })
 })
 
-export default app.serve({ port: 3000 })
+app.serve({ port: 3000 })
 `
 }
 
