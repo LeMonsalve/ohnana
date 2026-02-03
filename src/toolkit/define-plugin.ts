@@ -1,3 +1,4 @@
+import type { MiddlewareHandler } from 'hono'
 import type { PluginDefinition, PluginInstance } from './types'
 
 export function definePlugin<
@@ -18,4 +19,21 @@ export function definePlugin<
     },
     config,
   } as PluginInstance<TContext> & { config?: TConfig });
+}
+
+let middlewareCounter = 0
+
+export function fromMiddleware<TContext extends Record<string, unknown> = {}>(
+  middleware: MiddlewareHandler,
+  options?: { id?: string; context?: TContext }
+): PluginInstance<TContext> {
+  const id = options?.id ?? `middleware-${++middlewareCounter}`
+  
+  return {
+    id,
+    _context: {} as TContext,
+    hooks: {
+      onRequest: middleware as any,
+    },
+  }
 }
