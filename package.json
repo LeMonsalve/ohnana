@@ -3,9 +3,17 @@
   "version": "0.1.0",
   "type": "module",
   "description": "A meta-framework for Hono with plugin system and TypeScript inference",
+  "author": "Juan José Monsalve Orozco",
   "bin": {
     "uhono": "./src/cli/index.ts"
   },
+  "keywords": [
+    "hono",
+    "uhono",
+    "typescript",
+    "plugin",
+    "framework"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./plugins": "./src/plugins/index.ts",
