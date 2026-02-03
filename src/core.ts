@@ -6,10 +6,10 @@ export class UHono<TPlugins extends readonly PluginInstance<any>[] = readonly []
 }> {
   private plugins: readonly PluginInstance<any>[];
 
-  constructor(config: UHonoConfig<TPlugins> = {} as UHonoConfig<TPlugins>) {
+  constructor(config: UHonoConfig<TPlugins>) {
     super(config.basePath ? { strict: false } : undefined);
 
-    this.plugins = (config.plugins || []) as readonly PluginInstance<any>[];
+    this.plugins = config.plugins || ([] as const);
 
     this.registerPlugins();
   }
@@ -35,4 +35,10 @@ export class UHono<TPlugins extends readonly PluginInstance<any>[] = readonly []
       });
     }
   }
+}
+
+export function createApp<const TPlugins extends readonly PluginInstance<any>[]>(
+  config: UHonoConfig<TPlugins>
+): UHono<TPlugins> {
+  return new UHono(config);
 }
