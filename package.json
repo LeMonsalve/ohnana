@@ -1,0 +1,27 @@
+{
+  "name": "uhono",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A meta-framework for Hono with plugin system and TypeScript inference",
+  "exports": {
+    ".": "./src/index.ts",
+    "./plugins": "./src/plugins/index.ts",
+    "./toolkit": "./src/toolkit/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@t3-oss/env-core": "^0.13.10",
+    "hono": "^4.11.7",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
