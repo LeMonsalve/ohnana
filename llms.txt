@@ -1,0 +1,704 @@
+# Ohnana
+
+> A meta-framework for Hono with a powerful plugin system and full TypeScript type inference.
+
+## Project Overview
+
+Ohnana is a TypeScript meta-framework built on top of Hono that provides:
+- **Plugin System**: 5 lifecycle hooks (onInit, onRequest, onResponse, onError, onShutdown)
+- **Type Inference**: Automatic context type inference from plugin array
+- **Built-in Plugins**: 7 production-ready plugins for common needs
+- **Testing Utilities**: Test client for making requests without starting a server
+- **Plugin Toolkit**: definePlugin() for creating custom plugins with full type safety
+
+**Architecture**: Extends Hono (NOT OpenAPIHono), uses Bun runtime, includes graceful shutdown.
+
+## Installation
+
+```bash
+bun add ohnana hono
+```
+
+## Package Exports
+
+Ohnana provides 4 subpath exports:
+
+1. `ohnana` - Main export (core, types)
+2. `ohnana/plugins` - Built-in plugins
+3. `ohnana/toolkit` - Plugin development utilities
+4. `ohnana/testing` - Testing utilities
+
+---
+
+## 1. Core API (`ohnana`)
+
+### ohnana()
+
+Factory function that creates an Ohnana app with automatic type inference.
+
+```typescript
+import { ohnana } from 'ohnana'
+import { requestId, logger } from 'ohnana/plugins'
+
+const app = ohnana({
+  plugins: [requestId(), logger()]
+})
+
+// Context is automatically typed from plugins
+app.get('/', (c) => {
+  const id = c.get('requestId') // ✓ string (from requestId plugin)
+  return c.json({ requestId: id })
+})
+```
+
+### Ohnana class
+
+Low-level class constructor (use ohnana() function instead for better type inference).
+
+```typescript
+import { Ohnana } from 'ohnana'
+
+const app = new Ohnana({
+  plugins: [...] as const
+})
+```
+
+### Types
+
+```typescript
+import type { 
+  OhnanaConfig,
+  PluginInstance,
+  PluginDefinition,
+  PluginHooks,
+  ErrorResponse,
+  InferContext
+} from 'ohnana'
+```
+
+### Error Codes
+
+```typescript
+import { ErrorCodes } from 'ohnana'
+
+ErrorCodes.NOT_FOUND        // 'NOT_FOUND'
+ErrorCodes.BAD_REQUEST      // 'BAD_REQUEST'
+ErrorCodes.UNAUTHORIZED     // 'UNAUTHORIZED'
+ErrorCodes.FORBIDDEN        // 'FORBIDDEN'
+ErrorCodes.INTERNAL_ERROR   // 'INTERNAL_ERROR'
+ErrorCodes.VALIDATION_ERROR // 'VALIDATION_ERROR'
+```
+
+### app.group()
+
+Create route groups with optional scoped plugins.
+
+```typescript
+// With plugins
+app.group('/api', [authPlugin()], (api) => {
+  api.get('/me', (c) => {
+    const userId = c.get('userId') // ✓ Typed from authPlugin
+    return c.json({ userId })
+  })
+})
+
+// Without plugins (just grouping)
+app.group('/admin', (admin) => {
+  admin.get('/stats', (c) => c.json({ stats: [] }))
+})
+```
+
+### app.serve()
+
+Start server with graceful shutdown handling.
+
+```typescript
+app.serve({ port: 3000 })
+// Handles SIGTERM/SIGINT, calls plugin onShutdown hooks in reverse order
+```
+
+### export default
+
+Standard Bun server export:
+
+```typescript
+export default {
+  port: 3000,
+  fetch: app.fetch
+}
+```
+
+---
+
+## 2. Built-in Plugins (`ohnana/plugins`)
+
+### requestId
+
+Generates a UUID for each request and adds `X-Request-ID` header.
+
+```typescript
+import { requestId } from 'ohnana/plugins'
+import type { RequestIdConfig } from 'ohnana/plugins'
+
+const app = ohnana({
+  plugins: [requestId()]
+})
+
+// Context extension: { requestId: string }
+```
+
+**Config**: None (currently)
+
+**Context**: `{ requestId: string }`
+
+### logger
+
+Request/response logging with colored output and timing.
+
+```typescript
+import { logger } from 'ohnana/plugins'
+import type { LoggerConfig } from 'ohnana/plugins'
+
+const app = ohnana({
+  plugins: [logger()]
+})
+
+// Context extension: { logger: Logger }
+// Logger interface:
+// - debug(message: string, meta?: Record<string, unknown>): void
+// - info(message: string, meta?: Record<string, unknown>): void
+// - warn(message: string, meta?: Record<string, unknown>): void
+// - error(message: string, meta?: Record<string, unknown>): void
+```
+
+**Config**: 
+- `skip?: (path: string) => boolean` - Skip logging for certain paths
+
+**Context**: `{ logger: Logger }`
+
+### cors
+
+CORS headers with permissive defaults.
+
+```typescript
+import { cors } from 'ohnana/plugins'
+import type { CorsConfig } from 'ohnana/plugins'
+
+const app = ohnana({
+  plugins: [cors()]
+})
+```
+
+**Config**:
+- `origin?: string | string[]` - Allowed origins (default: '*')
+- `methods?: string[]` - Allowed methods
+- `headers?: string[]` - Allowed headers
+- `credentials?: boolean` - Allow credentials
+
+**Context**: None
+
+### errorHandler
+
+Structured error responses with format `{ message, code, requestId }`.
+
+```typescript
+import { errorHandler } from 'ohnana/plugins'
+import type { ErrorHandlerConfig } from 'ohnana/plugins'
+
+const app = ohnana({
+  plugins: [errorHandler()]
+})
+
+// Handles HTTPException from Hono
+// Includes 404 handler
+// Returns: { message: string, code: string, requestId?: string }
+```
+
+**Config**:
+- `includeStack?: boolean` - Include stack trace (for dev)
+
+**Context**: None
+
+### health
+
+Health check endpoint with custom checks.
+
+```typescript
+import { health } from 'ohnana/plugins'
+import type { HealthConfig, HealthCheck } from 'ohnana/plugins'
+
+const app = ohnana({
+  plugins: [
+    health({
+      path: '/health', // default
+      checks: {
+        database: async () => {
+          // return true if healthy, false if not
+          return await db.ping()
+        }
+      }
+    })
+  ]
+})
+
+// GET /health returns:
+// { status: 'healthy', timestamp: '...', checks: { database: 'ok' } }
+```
+
+**Config**:
+- `path?: string` - Endpoint path (default: `/health`)
+- `checks?: Record<string, HealthCheck>` - Custom health checks
+  - `HealthCheck = () => Promise<boolean> | boolean`
+
+**Context**: None
+
+### rateLimiter
+
+In-memory rate limiting with configurable window and limits.
+
+```typescript
+import { rateLimiter } from 'ohnana/plugins'
+import type { RateLimiterConfig } from 'ohnana/plugins'
+
+const app = ohnana({
+  plugins: [
+    rateLimiter({
+      windowMs: 60_000,  // 1 minute (default)
+      max: 100,          // 100 requests per window (default)
+      skip: (c) => c.req.path === '/health',
+      keyGenerator: (c) => c.req.header('x-api-key') ?? 'default'
+    })
+  ]
+})
+
+// Returns 429 with Retry-After header when limit exceeded
+// Adds X-RateLimit-* headers to all responses
+```
+
+**Config**:
+- `windowMs?: number` - Time window in ms (default: 60000)
+- `max?: number` - Max requests per window (default: 100)
+- `keyGenerator?: (c: Context) => string` - Custom key (default: IP address)
+- `skip?: (c: Context) => boolean` - Skip rate limiting for certain requests
+- `message?: string` - Custom error message
+
+**Context**: None
+
+### prometheus
+
+Prometheus metrics endpoint with request metrics.
+
+```typescript
+import { prometheus } from 'ohnana/plugins'
+import type { MetricsConfig } from 'ohnana/plugins'
+
+const app = ohnana({
+  plugins: [
+    prometheus({
+      path: '/metrics', // default
+      includePath: false // default (high cardinality warning)
+    })
+  ]
+})
+
+// GET /metrics returns Prometheus format:
+// - http_requests_total{method, status, path?}
+// - http_request_duration_ms{method, status, quantile}
+// - http_requests_in_flight
+```
+
+**Config**:
+- `path?: string` - Endpoint path (default: `/metrics`)
+- `includePath?: boolean` - Include path label (can be high cardinality)
+
+**Context**: None
+
+---
+
+## 3. Plugin Toolkit (`ohnana/toolkit`)
+
+### definePlugin()
+
+Create custom plugins with full type inference.
+
+```typescript
+import { definePlugin } from 'ohnana/toolkit'
+
+const myPlugin = definePlugin({
+  id: 'myPlugin',
+  context: {} as { myValue: string },
+
+  onInit: (app) => {
+    console.log('Plugin initialized')
+  },
+
+  onRequest: async (c, next) => {
+    c.set('myValue', 'hello')
+    await next()
+  },
+
+  onResponse: (c, response) => {
+    console.log('Response generated')
+    return response
+  },
+
+  onError: (error, c) => {
+    console.error('Error:', error)
+    return c.json({ error: error.message }, 500)
+  },
+
+  onShutdown: async () => {
+    console.log('Shutting down')
+  }
+})
+
+const app = ohnana({
+  plugins: [myPlugin()]
+})
+
+app.get('/', (c) => {
+  const value = c.get('myValue') // ✓ Typed as string
+  return c.json({ value })
+})
+```
+
+### Plugin with Dependencies
+
+```typescript
+const authPlugin = definePlugin({
+  id: 'auth',
+  requires: [requestId], // Plugin dependencies
+  context: {} as { userId: string },
+
+  onRequest: async (c, next) => {
+    // Can access requestId from dependency
+    const reqId = c.get('requestId')
+    
+    const token = c.req.header('Authorization')
+    if (!token) {
+      throw new HTTPException(401, { message: 'Unauthorized' })
+    }
+    
+    c.set('userId', 'user-123')
+    await next()
+  }
+})
+
+// Ohnana validates that requestId is registered before auth
+const app = ohnana({
+  plugins: [
+    requestId(), // Must be before auth
+    authPlugin()
+  ]
+})
+```
+
+### fromMiddleware()
+
+Wrap Hono middleware as an Ohnana plugin.
+
+```typescript
+import { fromMiddleware } from 'ohnana/toolkit'
+import { someHonoMiddleware } from 'some-package'
+
+const wrapped = fromMiddleware(someHonoMiddleware, {
+  id: 'myMiddleware', // optional
+  context: {} as { myVar: string } // optional
+})
+
+const app = ohnana({
+  plugins: [wrapped]
+})
+```
+
+### Types
+
+```typescript
+import type {
+  PluginHooks,
+  PluginDefinition,
+  PluginInstance,
+  PluginFactory,
+  ExtractPluginContext,
+  CombineRequiredContexts
+} from 'ohnana/toolkit'
+```
+
+**PluginHooks**: 5 lifecycle hooks (onInit, onRequest, onResponse, onError, onShutdown)
+
+**PluginDefinition**: What definePlugin() accepts (includes `requires`, `context`)
+
+**PluginInstance**: What plugins return after config (includes `_context`, `_requires`, `hooks`)
+
+**PluginFactory**: `(config?: any) => PluginInstance<TContext>`
+
+**InferContext**: Combines context types from plugin array
+
+---
+
+## 4. Testing Utilities (`ohnana/testing`)
+
+### createTestClient()
+
+Create a test client for making requests without starting a server.
+
+```typescript
+import { createTestClient } from 'ohnana/testing'
+import type { TestClient, TestResponse } from 'ohnana/testing'
+import { test, expect } from 'bun:test'
+
+const app = ohnana({
+  plugins: [requestId(), errorHandler()]
+})
+
+app.get('/users/:id', (c) => {
+  const id = c.req.param('id')
+  return c.json({ id, requestId: c.get('requestId') })
+})
+
+const client = createTestClient(app)
+
+test('GET /users/:id returns user', async () => {
+  const res = await client.get('/users/123')
+  
+  expect(res.status).toBe(200)
+  
+  const data = await res.json()
+  expect(data.id).toBe('123')
+  expect(data.requestId).toBeDefined()
+})
+
+test('POST with body', async () => {
+  const res = await client.post('/users', {
+    name: 'John',
+    email: 'john@example.com'
+  })
+  
+  expect(res.status).toBe(201)
+  const data = await res.json()
+  expect(data.name).toBe('John')
+})
+```
+
+### TestClient Interface
+
+```typescript
+interface TestClient {
+  get(path: string, init?: RequestInit): Promise<TestResponse>
+  post(path: string, body?: unknown, init?: RequestInit): Promise<TestResponse>
+  put(path: string, body?: unknown, init?: RequestInit): Promise<TestResponse>
+  patch(path: string, body?: unknown, init?: RequestInit): Promise<TestResponse>
+  delete(path: string, init?: RequestInit): Promise<TestResponse>
+  request(path: string, init?: RequestInit): Promise<TestResponse>
+}
+```
+
+### TestResponse Interface
+
+```typescript
+interface TestResponse {
+  status: number
+  headers: Headers
+  text(): Promise<string>
+  json<T = unknown>(): Promise<T>
+  raw: Response
+}
+```
+
+---
+
+## Architecture Details
+
+### Plugin System
+
+**5 Lifecycle Hooks**:
+1. `onInit(app)` - Called when plugin is registered
+2. `onRequest(c, next)` - Middleware before each request
+3. `onResponse(c, response)` - Called after response generated
+4. `onError(error, c)` - Called when error occurs
+5. `onShutdown()` - Called when app is shutting down
+
+**Context Extension**: Plugins can extend the Hono context with typed values via the `context` field.
+
+**Dependency Management**: Plugins can declare dependencies via `requires`, runtime validates they're registered.
+
+**Type Inference**: Context types are automatically inferred from the plugin array using TypeScript mapped types.
+
+### Type System
+
+```typescript
+// Context inference from plugins
+type InferContext<TPlugins> = TPlugins extends [infer First, ...infer Rest]
+  ? ExtractContext<First> & InferContext<Rest>
+  : {}
+
+// Usage
+const app = ohnana({
+  plugins: [requestId(), logger()] as const
+})
+// app context = { requestId: string } & { logger: Logger }
+```
+
+### Graceful Shutdown
+
+```typescript
+app.serve({ port: 3000 })
+
+// On SIGTERM/SIGINT:
+// 1. Stop accepting new connections
+// 2. Call plugin onShutdown hooks in reverse order
+// 3. Exit process
+```
+
+### Error Handling
+
+Standard error response format:
+
+```typescript
+{
+  message: string      // Human-readable error
+  code: string         // Machine-readable code (from ErrorCodes)
+  details?: object     // Optional additional context
+  requestId?: string   // From requestId plugin if present
+}
+```
+
+---
+
+## Common Patterns
+
+### Full Stack Example
+
+```typescript
+import { ohnana } from 'ohnana'
+import { requestId, logger, cors, errorHandler, health, rateLimiter } from 'ohnana/plugins'
+
+const app = ohnana({
+  plugins: [
+    requestId(),
+    logger(),
+    cors(),
+    errorHandler(),
+    health({ checks: { db: () => db.ping() } }),
+    rateLimiter({ max: 100 })
+  ]
+})
+
+app.get('/', (c) => {
+  return c.json({ 
+    message: 'Hello!', 
+    requestId: c.get('requestId') 
+  })
+})
+
+export default { port: 3000, fetch: app.fetch }
+```
+
+### Custom Auth Plugin
+
+```typescript
+import { definePlugin } from 'ohnana/toolkit'
+import { HTTPException } from 'hono/http-exception'
+
+const auth = definePlugin({
+  id: 'auth',
+  requires: [requestId], // Dependency
+  context: {} as { userId: string; user: User },
+
+  onRequest: async (c, next) => {
+    const token = c.req.header('Authorization')?.replace('Bearer ', '')
+    
+    if (!token) {
+      throw new HTTPException(401, { message: 'Missing token' })
+    }
+    
+    const user = await verifyToken(token)
+    if (!user) {
+      throw new HTTPException(401, { message: 'Invalid token' })
+    }
+    
+    c.set('userId', user.id)
+    c.set('user', user)
+    
+    await next()
+  }
+})
+
+// Usage
+const app = ohnana({
+  plugins: [requestId(), auth()]
+})
+
+app.get('/api/me', (c) => {
+  const user = c.get('user') // ✓ Typed as User
+  return c.json({ user })
+})
+```
+
+### Route Groups with Scoped Plugins
+
+```typescript
+const app = ohnana({
+  plugins: [requestId(), errorHandler()]
+})
+
+// Public routes (no auth)
+app.get('/', (c) => c.json({ status: 'ok' }))
+
+// Protected routes (with auth plugin scoped)
+app.group('/api', [auth()], (api) => {
+  api.get('/me', (c) => {
+    const userId = c.get('userId') // ✓ From auth plugin
+    return c.json({ userId })
+  })
+  
+  api.get('/profile', (c) => {
+    const user = c.get('user') // ✓ From auth plugin
+    return c.json({ user })
+  })
+})
+```
+
+---
+
+## Development
+
+**Runtime**: Bun (not Node.js)
+
+**Commands**:
+- `bun install` - Install dependencies
+- `bun run dev` - Development mode
+- `bun test` - Run tests
+- `bun run typecheck` - TypeScript check
+
+**Project Structure**:
+```
+src/
+├── index.ts           # Main exports
+├── core.ts            # Ohnana class
+├── types.ts           # Core types
+├── plugins/           # Built-in plugins
+│   ├── index.ts
+│   ├── request-id.ts
+│   ├── logger.ts
+│   ├── cors.ts
+│   ├── error-handler.ts
+│   ├── health.ts
+│   ├── rate-limiter.ts
+│   └── metrics.ts
+├── toolkit/           # Plugin development
+│   ├── index.ts
+│   ├── types.ts
+│   └── define-plugin.ts
+└── testing/           # Test utilities
+    └── index.ts
+```
+
+---
+
+## Version & License
+
+- **Version**: 0.4.0
+- **License**: MIT
+- **Author**: Juan José Monsalve Orozco
+- **Repository**: https://github.com/lemonsalve/ohnana
