@@ -18,3 +18,21 @@ export type { RateLimiterConfig } from './rate-limiter'
 
 export { prometheus } from './metrics'
 export type { MetricsConfig } from './metrics'
+
+export { openapi } from './openapi'
+export type { OpenAPIConfig, ScalarTheme } from './openapi'
+
+export { validator } from './validator'
+export type { ValidatorConfig } from './validator'
+
+export { redis } from './redis'
+export type { RedisConfig } from './redis'
+
+export { queue } from './queue'
+export type { QueueConfig } from './queue'
+
+export { drizzle } from './drizzle'
+export type { DrizzleConfig } from './drizzle'
+
+export { globalLogger, createLogger } from './logger'
+export type { Logger } from './logger'

@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.10",
+    "bee-queue": "^1.7.1",
     "hono": "^4.11.7",
     "zod": "^4.3.6"
   },
