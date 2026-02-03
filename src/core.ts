@@ -37,7 +37,7 @@ export class UHono<TPlugins extends readonly PluginInstance<any>[] = readonly []
   }
 }
 
-export function createApp<const TPlugins extends readonly PluginInstance<any>[]>(
+export function uhono<const TPlugins extends readonly PluginInstance<any>[]>(
   config: UHonoConfig<TPlugins>
 ): UHono<TPlugins> {
   return new UHono(config);
