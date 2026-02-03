@@ -1,9 +1,6 @@
-import type { MiddlewareHandler } from 'hono'
-import { requestId as honoRequestId } from 'hono/request-id'
 import { definePlugin } from '../toolkit'
 
 export interface RequestIdConfig {
-  driver?: MiddlewareHandler
   header?: string
 }
 
