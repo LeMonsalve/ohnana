@@ -16,33 +16,44 @@ function getErrorCode(status: number): string {
   }
 }
 
+// Helper to safely get optional context values
+function tryGet<T>(c: any, key: string): T | undefined {
+  try {
+    return c.get(key)
+  } catch {
+    return undefined
+  }
+}
+
 export const errorHandler = definePlugin({
   id: 'errorHandler',
   
   onError: (error, c) => {
-    const requestId = c.get('requestId')
+    // requestId is optional - include if available
+    const requestId = tryGet<string>(c, 'requestId')
     
     if (error instanceof HTTPException) {
       return c.json({
         message: error.message,
         code: getErrorCode(error.status),
-        requestId,
+        ...(requestId && { requestId }),
       }, error.status)
     }
     
     return c.json({
       message: 'Internal Server Error',
       code: ErrorCodes.INTERNAL_ERROR,
-      requestId,
+      ...(requestId && { requestId }),
     }, 500)
   },
   
   onInit: (app) => {
     app.notFound((c: any) => {
+      const requestId = tryGet<string>(c, 'requestId')
       return c.json({
         message: 'Not Found',
         code: ErrorCodes.NOT_FOUND,
-        requestId: c.get('requestId'),
+        ...(requestId && { requestId }),
       }, 404)
     })
   }

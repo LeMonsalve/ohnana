@@ -1,15 +1,27 @@
 import type { MiddlewareHandler } from 'hono'
-import type { PluginDefinition, PluginInstance } from './types'
+import type { PluginDefinition, PluginInstance, PluginFactory } from '../types'
 
+/**
+ * Define a plugin with full type inference
+ */
 export function definePlugin<
   TConfig = void,
-  TContext extends Record<string, unknown> = {}
+  TContext extends Record<string, unknown> = {},
+  const TRequires extends readonly PluginFactory<any>[] = readonly []
 >(
-  definition: PluginDefinition<TConfig, TContext>
-): (config?: TConfig) => PluginInstance<TContext> {
+  definition: PluginDefinition<TConfig, TContext, TRequires>
+): PluginFactory<TContext> {
+  // Extract required plugin IDs for runtime validation
+  const requiredIds = definition.requires?.map(factory => {
+    // Call the factory to get the plugin instance and extract its ID
+    const instance = factory()
+    return instance.id
+  }) ?? []
+
   return (config?: TConfig) => ({
     id: definition.id,
     _context: {} as TContext,
+    _requires: requiredIds.length > 0 ? requiredIds : undefined,
     hooks: {
       onInit: definition.onInit,
       onRequest: definition.onRequest,
@@ -18,11 +30,14 @@ export function definePlugin<
       onShutdown: definition.onShutdown,
     },
     config,
-  } as PluginInstance<TContext> & { config?: TConfig });
+  } as PluginInstance<TContext> & { config?: TConfig })
 }
 
 let middlewareCounter = 0
 
+/**
+ * Wrap a Hono middleware as an Ohnana plugin
+ */
 export function fromMiddleware<TContext extends Record<string, unknown> = {}>(
   middleware: MiddlewareHandler,
   options?: { id?: string; context?: TContext }
