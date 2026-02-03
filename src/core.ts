@@ -111,13 +111,16 @@ export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly [
       startTime: this.startTime,
     });
 
-    const wsPath = options.websocket?.path ?? '/ws';
+    // Check for WebSocket config from plugin or serve options
+    const pluginWsConfig = (this as any)._wsConfig;
+    const wsConfig = options.websocket || pluginWsConfig;
+    const wsPath = wsConfig?.path ?? '/ws';
     const honoFetch = this.fetch.bind(this);
-    const wsHandlers = options.websocket?.handlers;
+    const wsHandlers = wsConfig?.handlers;
 
     const server = Bun.serve<WebSocketData>({
       port: options.port,
-      fetch: options.websocket 
+      fetch: wsConfig 
         ? (req, server) => {
             // Check if this is a WebSocket upgrade request
             const url = new URL(req.url);
