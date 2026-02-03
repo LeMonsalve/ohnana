@@ -9,6 +9,7 @@ import {
   prometheus,
   openapi,
   validator,
+  websocket,
   globalLogger
 } from './src/plugins'
 import { z } from 'zod'
@@ -78,6 +79,21 @@ const app = ohnana({
       theme: 'kepler'
     }),
     
+    // WebSocket with Pub/Sub rooms
+    websocket({
+      path: '/ws',
+      onOpen: (client) => {
+        console.log(`[WS] Client connected: ${client.id}`)
+      },
+      onClose: (client) => {
+        console.log(`[WS] Client disconnected: ${client.id}`)
+      },
+      onMessage: (client, msg) => {
+        // Handle custom actions beyond join/leave/broadcast
+        console.log(`[WS] Custom message from ${client.id}:`, msg)
+      }
+    }),
+    
     errorHandler(),
     cors()
   ]
@@ -112,6 +128,29 @@ app.get('/error', () => {
   throw new Error('Test error')
 })
 
+// Broadcast to WebSocket clients from HTTP
+app.post('/broadcast', async (c) => {
+  const body = await c.req.json()
+  const ws = c.get('ws')
+  
+  if (body.room) {
+    ws.broadcast(body.room, body.data || body.message)
+    return c.json({ 
+      sent: true, 
+      room: body.room,
+      clients: ws.clients(body.room).size 
+    })
+  } else {
+    ws.broadcastAll(body.data || body.message)
+    return c.json({ 
+      sent: true, 
+      room: 'all',
+      clients: ws.clientCount 
+    })
+  }
+})
+
 globalLogger.info('Starting Ohnana example server...')
+globalLogger.info('WebSocket available at ws://localhost:3000/ws')
 
 app.serve({ port: 3000 })

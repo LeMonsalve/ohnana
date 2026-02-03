@@ -96,6 +96,59 @@ ohnana({ plugins: [errorHandler()] })
 
 Handles `HTTPException` from Hono and includes a 404 handler.
 
+#### websocket
+Real-time WebSocket support with Pub/Sub rooms pattern.
+
+```typescript
+import { websocket } from 'ohnana/plugins'
+
+const app = ohnana({
+  plugins: [
+    websocket({
+      path: '/ws',  // WebSocket endpoint (default: '/ws')
+      onOpen: (client) => console.log('Connected:', client.id),
+      onClose: (client) => console.log('Disconnected:', client.id),
+      onMessage: (client, msg) => {
+        // Handle custom messages beyond built-in actions
+        console.log('Message:', msg)
+      }
+    })
+  ]
+})
+
+// Broadcast from HTTP routes
+app.post('/notify', async (c) => {
+  const { room, message } = await c.req.json()
+  c.get('ws').broadcast(room, { alert: message })
+  return c.json({ sent: true })
+})
+```
+
+Context extension: `{ ws: WebSocketServer }`
+
+**Built-in message protocol (JSON):**
+- `{ action: 'join', room: 'room-name' }` - Join a room
+- `{ action: 'leave', room: 'room-name' }` - Leave a room
+- `{ action: 'broadcast', room: 'room-name', data: {...} }` - Broadcast to room
+
+**Client example:**
+```javascript
+const ws = new WebSocket('ws://localhost:3000/ws')
+
+// Join a room
+ws.send(JSON.stringify({ action: 'join', room: 'updates' }))
+
+// Receive messages
+ws.onmessage = (e) => console.log(JSON.parse(e.data))
+
+// Broadcast to room
+ws.send(JSON.stringify({ 
+  action: 'broadcast', 
+  room: 'updates', 
+  data: { msg: 'Hello!' } 
+}))
+```
+
 ### Creating Custom Plugins
 
 ```typescript
