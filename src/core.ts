@@ -34,6 +34,40 @@ export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly [
     return this.plugins.length;
   }
 
+  /**
+   * Create a route group with additional plugins
+   * Plugins in the group only apply to routes within the group
+   */
+  group<TGroupPlugins extends readonly PluginInstance<any>[]>(
+    basePath: string,
+    plugins: TGroupPlugins,
+    configure: (
+      group: Hono<{ Variables: InferContext<TPlugins> & InferContext<TGroupPlugins> }>
+    ) => void
+  ): this {
+    const subApp = new Hono<{ 
+      Variables: InferContext<TPlugins> & InferContext<TGroupPlugins> 
+    }>();
+    
+    // Register group plugins as middlewares
+    for (const plugin of plugins) {
+      if (plugin.hooks.onInit) {
+        plugin.hooks.onInit(subApp);
+      }
+      if (plugin.hooks.onRequest) {
+        subApp.use('*', plugin.hooks.onRequest as any);
+      }
+    }
+    
+    // Let user configure routes
+    configure(subApp);
+    
+    // Mount sub-app at basePath
+    this.route(basePath, subApp);
+    
+    return this;
+  }
+
   serve(options: ServeOptions) {
     printStartup({
       port: options.port,

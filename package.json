@@ -27,11 +27,13 @@
   "exports": {
     ".": "./src/index.ts",
     "./plugins": "./src/plugins/index.ts",
-    "./toolkit": "./src/toolkit/index.ts"
+    "./toolkit": "./src/toolkit/index.ts",
+    "./testing": "./src/testing/index.ts"
   },
   "scripts": {
     "dev": "bun run src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.10",
