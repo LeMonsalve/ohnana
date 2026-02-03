@@ -1,6 +1,6 @@
 {
   "name": "ohnana",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "description": "A meta-framework for Hono with plugin system and TypeScript inference",
   "author": "Juan José Monsalve Orozco <devlemonsalve@gmail.com> (https://github.com/lemonsalve)",
