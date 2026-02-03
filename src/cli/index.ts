@@ -11,7 +11,7 @@ if (command === 'create') {
   
   if (!projectName) {
     console.error('Error: Project name is required')
-    console.log('Usage: uhono create <name> [--dir=path]')
+    console.log('Usage: ohnana create <name> [--dir=path]')
     process.exit(1)
   }
   
@@ -19,7 +19,7 @@ if (command === 'create') {
   const baseDir = dirArg ? dirArg.split('=')[1]! : process.cwd()
   const projectPath = join(baseDir, projectName)
   
-  console.log(`Creating uHono project: ${projectName}`)
+  console.log(`Creating Ohnana project: ${projectName}`)
   console.log(`Location: ${projectPath}`)
   
   await createProject(projectPath, projectName)
@@ -29,7 +29,7 @@ if (command === 'create') {
   console.log(`  cd ${projectName}`)
   console.log('  bun run dev')
 } else {
-  console.log('Usage: uhono create <name> [--dir=path]')
+  console.log('Usage: ohnana create <name> [--dir=path]')
   process.exit(1)
 }
 
@@ -149,7 +149,7 @@ dist/
 function getReadmeTemplate(projectName: string): string {
   return `# ${projectName}
 
-A Hono project created with uHono CLI.
+A Hono project created with Ohnana CLI.
 
 ## Getting Started
 

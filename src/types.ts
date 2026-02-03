@@ -4,7 +4,7 @@ import type { Context, Next } from 'hono'
  * Plugin hooks - lifecycle events
  */
 export interface PluginHooks<TContext extends Record<string, unknown> = {}> {
-  /** Called when plugin is registered in UHono */
+  /** Called when plugin is registered in Ohnana */
   onInit?: (app: any) => void;
   
   /** Called before each request (middleware) */
@@ -44,9 +44,9 @@ export interface PluginInstance<TContext extends Record<string, unknown> = {}> {
 }
 
 /**
- * UHono config - constructor options
+ * Ohnana config - constructor options
  */
-export interface UHonoConfig<TPlugins extends readonly PluginInstance<any>[] = readonly []> {
+export interface OhnanaConfig<TPlugins extends readonly PluginInstance<any>[] = readonly []> {
   plugins?: TPlugins;
   basePath?: string;
 }

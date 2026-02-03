@@ -1,4 +1,4 @@
-export { UHono, uhono } from './core'
-export type { UHonoConfig, PluginInstance, PluginDefinition, PluginHooks, ErrorResponse, InferContext } from './types'
+export { Ohnana, ohnana } from './core'
+export type { OhnanaConfig, PluginInstance, PluginDefinition, PluginHooks, ErrorResponse, InferContext } from './types'
 export { ErrorCodes } from './types'
 export { env } from './env'

@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "uhono",
+      "name": "ohnana",
       "dependencies": {
         "@t3-oss/env-core": "^0.13.10",
         "hono": "^4.11.7",

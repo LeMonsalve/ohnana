@@ -1,15 +1,25 @@
 {
-  "name": "uhono",
+  "name": "ohnana",
   "version": "0.1.0",
   "type": "module",
   "description": "A meta-framework for Hono with plugin system and TypeScript inference",
-  "author": "Juan José Monsalve Orozco",
+  "author": "Juan José Monsalve Orozco <devlemonsalve@gmail.com> (https://github.com/lemonsalve)",
   "bin": {
-    "uhono": "./src/cli/index.ts"
+    "ohnana": "src/cli/index.ts"
   },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/honojs/honox.git"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "homepage": "https://hono.dev",
   "keywords": [
     "hono",
-    "uhono",
+    "ohnana",
     "typescript",
     "plugin",
     "framework"

@@ -1,4 +1,4 @@
-# uHono
+# Ohnana
 
 A meta-framework for [Hono](https://hono.dev) with a powerful plugin system and full TypeScript type inference.
 
@@ -6,23 +6,23 @@ A meta-framework for [Hono](https://hono.dev) with a powerful plugin system and 
 
 - 🔌 **Plugin System**: Everything is a plugin with 5 lifecycle hooks
 - 🎯 **Type Inference**: Automatic context type inference from plugins
-- 🚀 **CLI**: Scaffold new projects with `uhono create`
+- 🚀 **CLI**: Scaffold new projects with `ohnana create`
 - 🛠️ **Built-in Plugins**: requestId, logger, cors, errorHandler
 - 📦 **3 Subpath Exports**: Core, plugins, and toolkit
 
 ## Installation
 
 ```bash
-bun add uhono hono
+bun add ohnana hono
 ```
 
 ## Quick Start
 
 ```typescript
-import { uhono } from 'uhono'
-import { requestId, logger, errorHandler, cors } from 'uhono/plugins'
+import { ohnana } from 'ohnana'
+import { requestId, logger, errorHandler, cors } from 'ohnana/plugins'
 
-const app = uhono({
+const app = ohnana({
   plugins: [
     requestId(),
     logger(),
@@ -47,7 +47,7 @@ export default {
 Create a new project:
 
 ```bash
-bunx uhono create my-app
+bunx ohnana create my-app
 cd my-app
 bun run dev
 ```
@@ -60,9 +60,9 @@ bun run dev
 Generates a unique UUID for each request and adds `X-Request-ID` header.
 
 ```typescript
-import { requestId } from 'uhono/plugins'
+import { requestId } from 'ohnana/plugins'
 
-uhono({ plugins: [requestId()] })
+ohnana({ plugins: [requestId()] })
 ```
 
 Context extension: `{ requestId: string }`
@@ -71,27 +71,27 @@ Context extension: `{ requestId: string }`
 Simple request/response logging with timing.
 
 ```typescript
-import { logger } from 'uhono/plugins'
+import { logger } from 'ohnana/plugins'
 
-uhono({ plugins: [logger()] })
+ohnana({ plugins: [logger()] })
 ```
 
 #### cors
 CORS headers with permissive defaults (`origin: '*'`).
 
 ```typescript
-import { cors } from 'uhono/plugins'
+import { cors } from 'ohnana/plugins'
 
-uhono({ plugins: [cors()] })
+ohnana({ plugins: [cors()] })
 ```
 
 #### errorHandler
 Structured error responses with format: `{ message, code, requestId }`.
 
 ```typescript
-import { errorHandler } from 'uhono/plugins'
+import { errorHandler } from 'ohnana/plugins'
 
-uhono({ plugins: [errorHandler()] })
+ohnana({ plugins: [errorHandler()] })
 ```
 
 Handles `HTTPException` from Hono and includes a 404 handler.
@@ -99,37 +99,37 @@ Handles `HTTPException` from Hono and includes a 404 handler.
 ### Creating Custom Plugins
 
 ```typescript
-import { definePlugin } from 'uhono/toolkit'
+import { definePlugin } from 'ohnana/toolkit'
 
 const myPlugin = definePlugin({
   id: 'myPlugin',
   context: {} as { myValue: string },
-  
+
   onInit: (app) => {
     console.log('Plugin initialized')
   },
-  
+
   onRequest: async (c, next) => {
     c.set('myValue', 'hello')
     await next()
   },
-  
+
   onResponse: (c, response) => {
     console.log('Response generated')
     return response
   },
-  
+
   onError: (error, c) => {
     console.error('Error:', error)
     return c.json({ error: error.message }, 500)
   },
-  
+
   onShutdown: async () => {
     console.log('Shutting down')
   }
 })
 
-const app = uhono({
+const app = ohnana({
   plugins: [myPlugin()]
 })
 
@@ -151,10 +151,10 @@ Plugins have 5 lifecycle hooks:
 
 ## Type Inference
 
-uHono automatically infers context types from your plugins:
+Ohnana automatically infers context types from your plugins:
 
 ```typescript
-const app = uhono({
+const app = ohnana({
   plugins: [
     requestId(),  // adds { requestId: string }
     myPlugin()    // adds { myValue: string }
@@ -173,26 +173,26 @@ app.get('/', (c) => {
 ### Core
 
 ```typescript
-import { uhono, UHono } from 'uhono'
+import { ohnana, Ohnana } from 'ohnana'
 
-// Recommended: uhono() with automatic type inference
-const app = uhono({ plugins: [...] })
+// Recommended: ohnana() with automatic type inference
+const app = ohnana({ plugins: [...] })
 
-// Alternative: new UHono() with as const
-const app = new UHono({ plugins: [...] as const })
+// Alternative: new Ohnana() with as const
+const app = new Ohnana({ plugins: [...] as const })
 ```
 
 ### Plugins
 
 ```typescript
-import { requestId, logger, cors, errorHandler } from 'uhono/plugins'
+import { requestId, logger, cors, errorHandler } from 'ohnana/plugins'
 ```
 
 ### Toolkit
 
 ```typescript
-import { definePlugin } from 'uhono/toolkit'
-import type { PluginDefinition, PluginHooks, PluginInstance } from 'uhono/toolkit'
+import { definePlugin } from 'ohnana/toolkit'
+import type { PluginDefinition, PluginHooks, PluginInstance } from 'ohnana/toolkit'
 ```
 
 ## Examples
@@ -200,10 +200,10 @@ import type { PluginDefinition, PluginHooks, PluginInstance } from 'uhono/toolki
 ### Basic API
 
 ```typescript
-import { uhono } from 'uhono'
-import { requestId, logger, errorHandler } from 'uhono/plugins'
+import { ohnana } from 'ohnana'
+import { requestId, logger, errorHandler } from 'ohnana/plugins'
 
-const app = uhono({
+const app = ohnana({
   plugins: [requestId(), logger(), errorHandler()]
 })
 
@@ -233,7 +233,7 @@ app.get('/error', () => {
 const authPlugin = definePlugin({
   id: 'auth',
   context: {} as { userId: string },
-  
+
   onRequest: async (c, next) => {
     const token = c.req.header('Authorization')
     if (!token) {
@@ -244,7 +244,7 @@ const authPlugin = definePlugin({
   }
 })
 
-const app = uhono({
+const app = ohnana({
   plugins: [authPlugin()]
 })
 ```

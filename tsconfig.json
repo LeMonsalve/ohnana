@@ -11,9 +11,9 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "uhono": ["./src/index.ts"],
-      "uhono/plugins": ["./src/plugins/index.ts"],
-      "uhono/toolkit": ["./src/toolkit/index.ts"]
+      "ohnana": ["./src/index.ts"],
+      "ohnana/plugins": ["./src/plugins/index.ts"],
+      "ohnana/toolkit": ["./src/toolkit/index.ts"]
     },
     "strict": true,
     "skipLibCheck": true,

@@ -1,14 +1,14 @@
-import { uhono } from "./src";
+import { ohnana } from "./src";
 import { requestId, logger, cors, errorHandler } from "./src/plugins";
 
-const app = uhono({
+const app = ohnana({
   plugins: [requestId(), logger(), errorHandler(), cors()],
 });
 
 app.get("/", (c) => {
   const id = c.get("requestId");
   return c.json({
-    message: "Hello UHono!",
+    message: "Hello Ohnana!",
     requestId: id,
     timestamp: new Date().toISOString(),
   });

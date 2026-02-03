@@ -1,12 +1,12 @@
 import { Hono } from "hono";
-import type { UHonoConfig, PluginInstance, InferContext } from "./types";
+import type { OhnanaConfig, PluginInstance, InferContext } from "./types";
 
-export class UHono<TPlugins extends readonly PluginInstance<any>[] = readonly []> extends Hono<{
+export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly []> extends Hono<{
   Variables: InferContext<TPlugins>;
 }> {
   private plugins: readonly PluginInstance<any>[];
 
-  constructor(config: UHonoConfig<TPlugins>) {
+  constructor(config: OhnanaConfig<TPlugins>) {
     super(config.basePath ? { strict: false } : undefined);
 
     this.plugins = config.plugins || ([] as const);
@@ -37,8 +37,8 @@ export class UHono<TPlugins extends readonly PluginInstance<any>[] = readonly []
   }
 }
 
-export function uhono<const TPlugins extends readonly PluginInstance<any>[]>(
-  config: UHonoConfig<TPlugins>
-): UHono<TPlugins> {
-  return new UHono(config);
+export function ohnana<const TPlugins extends readonly PluginInstance<any>[]>(
+  config: OhnanaConfig<TPlugins>
+): Ohnana<TPlugins> {
+  return new Ohnana(config);
 }
