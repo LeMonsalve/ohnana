@@ -32,6 +32,7 @@
   },
   "scripts": {
     "dev": "bun run src/index.ts",
+    "cli": "bun run src/cli create ./ohnana-generated-app",
     "typecheck": "tsc --noEmit",
     "test": "bun test"
   },
