@@ -1,4 +1,5 @@
 import { definePlugin } from '../toolkit'
+import { requestId } from './request-id'
 
 const colors = {
   reset: '\x1b[0m',
@@ -85,18 +86,19 @@ export interface LoggerConfig {
 
 export const logger = definePlugin({
   id: 'logger',
+  requires: [requestId],
   context: {} as { logger: Logger },
 
   onRequest: async (c, next) => {
-    const requestId = (c as any).get('requestId')
-    ;(c as any).set('logger', createLogger(requestId))
+    const reqId = c.get('requestId')
+    c.set('logger', createLogger(reqId))
     
     const start = Date.now()
     await next()
     const ms = Date.now() - start
-    const status = (c as any).res.status
-    const method = (c as any).req.method
-    const path = (c as any).req.path
+    const status = c.res.status
+    const method = c.req.method
+    const path = c.req.path
 
     const icon = getStatusIcon(status)
     const statusColor = getStatusColor(status)

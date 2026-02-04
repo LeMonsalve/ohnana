@@ -1,3 +1,4 @@
+import type { Context } from 'hono'
 import type { PluginInstance } from '../types'
 
 export interface MetricsConfig {
@@ -65,7 +66,7 @@ export function prometheus(config?: MetricsConfig): PluginInstance<{}> {
     _context: {},
     hooks: {
       onInit: (app) => {
-        app.get(path, (c: any) => {
+        app.get(path, (c: Context) => {
           return c.text(formatPrometheus(), 200, {
             'Content-Type': 'text/plain; version=0.0.4; charset=utf-8',
           })
@@ -82,9 +83,9 @@ export function prometheus(config?: MetricsConfig): PluginInstance<{}> {
           metrics.inFlight--
           
           const duration = Date.now() - start
-          const method = (c as any).req.method
-          const status = (c as any).res.status.toString()
-          const routePath = includePath ? (c as any).req.routePath ?? (c as any).req.path : undefined
+          const method = c.req.method
+          const status = c.res.status.toString()
+          const routePath = includePath ? c.req.routePath ?? c.req.path : undefined
           
           // Update counters
           const countKey = routePath ? `${method}|${status}|${routePath}` : `${method}|${status}`

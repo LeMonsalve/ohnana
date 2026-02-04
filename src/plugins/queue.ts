@@ -27,7 +27,7 @@ export function queue(config: QueueConfig): PluginInstance<{ queue: any }> {
 
       onRequest: async (c, next) => {
         if (queueInstance) {
-          (c as any).set('queue', queueInstance)
+          c.set('queue', queueInstance)
         }
         await next()
       },

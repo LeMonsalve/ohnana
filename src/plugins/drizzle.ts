@@ -13,7 +13,7 @@ export function drizzle<TDb>(
     instance: config.db,
     hooks: {
       onRequest: async (c, next) => {
-        (c as any).set('db', config.db)
+        c.set('db', config.db)
         await next()
       }
     }

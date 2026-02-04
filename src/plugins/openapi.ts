@@ -1,3 +1,4 @@
+import type { Context } from 'hono'
 import type { PluginInstance } from '../types'
 
 export type ScalarTheme = 
@@ -27,7 +28,8 @@ export function openapi(config: OpenAPIConfig): PluginInstance<{}> {
   const docsPath = config.docsPath ?? '/docs'
   const theme = config.theme ?? 'default'
   const darkMode = config.darkMode ?? true
-  const title = config.title ?? (config.spec.info as any)?.title ?? 'API Reference'
+  const specInfo = config.spec.info as { title?: string } | undefined
+  const title = config.title ?? specInfo?.title ?? 'API Reference'
   const favicon = config.favicon
   
   return {

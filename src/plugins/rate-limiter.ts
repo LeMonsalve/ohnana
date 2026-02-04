@@ -41,11 +41,11 @@ export function rateLimiter(config?: RateLimiterConfig): PluginInstance<{}> {
     hooks: {
       onRequest: async (c, next) => {
         // Skip if configured
-        if (config?.skip?.(c as any)) {
+        if (config?.skip?.(c)) {
           return next()
         }
         
-        const key = config?.keyGenerator?.(c as any) ?? getClientIP(c as any)
+        const key = config?.keyGenerator?.(c) ?? getClientIP(c)
         const now = Date.now()
         const record = store.get(key)
         
@@ -66,20 +66,20 @@ export function rateLimiter(config?: RateLimiterConfig): PluginInstance<{}> {
         if (record.count >= max) {
           const retryAfter = Math.ceil((record.resetAt - now) / 1000)
           
-          ;(c as any).header('Retry-After', retryAfter.toString())
-          ;(c as any).header('X-RateLimit-Limit', max.toString())
-          ;(c as any).header('X-RateLimit-Remaining', '0')
-          ;(c as any).header('X-RateLimit-Reset', record.resetAt.toString())
+          c.header('Retry-After', retryAfter.toString())
+          c.header('X-RateLimit-Limit', max.toString())
+          c.header('X-RateLimit-Remaining', '0')
+          c.header('X-RateLimit-Reset', record.resetAt.toString())
           
-          return (c as any).json({ message, retryAfter }, 429)
+          return c.json({ message, retryAfter }, 429)
         }
         
         // Increment and continue
         record.count++
         
-        ;(c as any).header('X-RateLimit-Limit', max.toString())
-        ;(c as any).header('X-RateLimit-Remaining', (max - record.count).toString())
-        ;(c as any).header('X-RateLimit-Reset', record.resetAt.toString())
+        c.header('X-RateLimit-Limit', max.toString())
+        c.header('X-RateLimit-Remaining', (max - record.count).toString())
+        c.header('X-RateLimit-Reset', record.resetAt.toString())
         
         return next()
       },

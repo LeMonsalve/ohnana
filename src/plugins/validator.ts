@@ -18,39 +18,39 @@ export function validator<
 >(config: ValidatorConfig<TBody, TParams, TQuery>) {
   return async (c: Context, next: Next) => {
     if (config.body) {
-      const result = config.body.safeParse(await (c as any).req.json())
+      const result = config.body.safeParse(await c.req.json())
       if (!result.success) {
-        return (c as any).json({
+        return c.json({
           message: 'Validation failed',
           code: 'VALIDATION_ERROR',
           details: result.error.flatten()
         }, 400)
       }
-      (c as any).set('validatedBody', result.data)
+      c.set('validatedBody', result.data)
     }
     
     if (config.params) {
-      const result = config.params.safeParse((c as any).req.param())
+      const result = config.params.safeParse(c.req.param())
       if (!result.success) {
-        return (c as any).json({
+        return c.json({
           message: 'Validation failed',
           code: 'VALIDATION_ERROR',
           details: result.error.flatten()
         }, 400)
       }
-      (c as any).set('validatedParams', result.data)
+      c.set('validatedParams', result.data)
     }
     
     if (config.query) {
-      const result = config.query.safeParse((c as any).req.query())
+      const result = config.query.safeParse(c.req.query())
       if (!result.success) {
-        return (c as any).json({
+        return c.json({
           message: 'Validation failed',
           code: 'VALIDATION_ERROR',
           details: result.error.flatten()
         }, 400)
       }
-      (c as any).set('validatedQuery', result.data)
+      c.set('validatedQuery', result.data)
     }
     
     await next()
