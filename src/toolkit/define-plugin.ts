@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from 'hono'
-import type { PluginDefinition, PluginInstance, PluginFactory } from '../types'
+import type { PluginDefinition, PluginInstance, PluginFactory, CombineRequiredContexts } from '../types'
 
 /**
  * Define a plugin with full type inference
@@ -7,10 +7,10 @@ import type { PluginDefinition, PluginInstance, PluginFactory } from '../types'
 export function definePlugin<
   TConfig = void,
   TContext extends Record<string, unknown> = {},
-  const TRequires extends readonly PluginFactory<any>[] = readonly []
+  const TRequires extends readonly PluginFactory<any, any>[] = readonly []
 >(
   definition: PluginDefinition<TConfig, TContext, TRequires>
-): PluginFactory<TContext> {
+): PluginFactory<TContext, CombineRequiredContexts<TRequires>> {
   // Extract required plugin IDs for runtime validation
   const requiredIds = definition.requires?.map(factory => {
     // Call the factory to get the plugin instance and extract its ID
@@ -30,7 +30,7 @@ export function definePlugin<
       onShutdown: definition.onShutdown,
     },
     config,
-  } as PluginInstance<TContext> & { config?: TConfig })
+  } as PluginInstance<TContext, CombineRequiredContexts<TRequires>> & { config?: TConfig })
 }
 
 let middlewareCounter = 0
@@ -41,14 +41,14 @@ let middlewareCounter = 0
 export function fromMiddleware<TContext extends Record<string, unknown> = {}>(
   middleware: MiddlewareHandler,
   options?: { id?: string; context?: TContext }
-): PluginInstance<TContext> {
+): PluginInstance<TContext, {}> {
   const id = options?.id ?? `middleware-${++middlewareCounter}`
   
   return {
     id,
     _context: {} as TContext,
     hooks: {
-      onRequest: middleware as any,
+      onRequest: middleware,
     },
   }
 }

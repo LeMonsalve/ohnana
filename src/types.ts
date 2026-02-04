@@ -3,8 +3,10 @@ import type { Context, Next } from 'hono'
 /**
  * A plugin factory function that creates plugin instances
  */
-export type PluginFactory<TContext extends Record<string, unknown> = {}> = 
-  (config?: any) => PluginInstance<TContext>
+export type PluginFactory<
+  TContext extends Record<string, unknown> = {},
+  TRequired extends Record<string, unknown> = {}
+> = (config?: any) => PluginInstance<TContext, TRequired>
 
 /**
  * Extract context type from a plugin factory
@@ -16,10 +18,10 @@ export type ExtractPluginContext<T> =
 /**
  * Combine contexts from multiple plugin factories
  */
-export type CombineRequiredContexts<T extends readonly PluginFactory<any>[]> = 
+export type CombineRequiredContexts<T extends readonly PluginFactory<any, any>[]> = 
   T extends readonly [infer First, ...infer Rest]
     ? ExtractPluginContext<First> & 
-      (Rest extends readonly PluginFactory<any>[] ? CombineRequiredContexts<Rest> : {})
+      (Rest extends readonly PluginFactory<any, any>[] ? CombineRequiredContexts<Rest> : {})
     : {}
 
 /**
@@ -61,7 +63,7 @@ export interface PluginHooks<
 export interface PluginDefinition<
   TConfig = void,
   TContext extends Record<string, unknown> = {},
-  TRequires extends readonly PluginFactory<any>[] = readonly []
+  TRequires extends readonly PluginFactory<any, any>[] = readonly []
 > {
   id: string;
   
@@ -99,11 +101,14 @@ export interface PluginDefinition<
 /**
  * Plugin instance - what plugins return after config
  */
-export interface PluginInstance<TContext extends Record<string, unknown> = {}> {
+export interface PluginInstance<
+  TContext extends Record<string, unknown> = {},
+  TRequired extends Record<string, unknown> = {}
+> {
   id: string;
   _context: TContext;
   _requires?: readonly string[];
-  hooks: PluginHooks<TContext, any>;
+  hooks: PluginHooks<TContext, TRequired>;
   instance?: unknown;
 }
 
@@ -111,7 +116,7 @@ export interface PluginInstance<TContext extends Record<string, unknown> = {}> {
  * Ohnana config - constructor options
  */
 export interface OhnanaConfig<
-  TPlugins extends readonly PluginInstance<any>[] = readonly [],
+  TPlugins extends readonly PluginInstance<any, any>[] = readonly [],
   TServices extends readonly ServiceInstance<any>[] = readonly []
 > {
   plugins?: TPlugins;
@@ -144,10 +149,10 @@ export const ErrorCodes = {
 /**
  * Infer combined context from all plugins
  */
-export type InferContext<TPlugins extends readonly PluginInstance<any>[]> = 
+export type InferContext<TPlugins extends readonly PluginInstance<any, any>[]> = 
   TPlugins extends readonly [infer First, ...infer Rest]
-    ? (First extends PluginInstance<infer C> ? C : {}) & 
-      (Rest extends readonly PluginInstance<any>[] ? InferContext<Rest> : {})
+    ? (First extends PluginInstance<infer C, any> ? C : {}) & 
+      (Rest extends readonly PluginInstance<any, any>[] ? InferContext<Rest> : {})
     : {};
 
 // ============================================

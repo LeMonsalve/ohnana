@@ -28,12 +28,12 @@ const colors = {
 }
 
 export class Ohnana<
-  TPlugins extends readonly PluginInstance<any>[] = readonly [],
+  TPlugins extends readonly PluginInstance<any, any>[] = readonly [],
   TServices extends readonly ServiceInstance<any>[] = readonly []
 > extends Hono<{
   Variables: InferContext<TPlugins>;
 }> {
-  private plugins: readonly PluginInstance<any>[];
+  private plugins: readonly PluginInstance<any, any>[];
   private services: readonly ServiceInstance<any>[];
   private serviceContainer: ServiceContainer;
   private readonly startTime: number;
@@ -69,7 +69,7 @@ export class Ohnana<
    *   admin.get('/stats', (c) => c.json({ stats: [] }))
    * })
    */
-  group<TGroupPlugins extends readonly PluginInstance<any>[]>(
+  group<TGroupPlugins extends readonly PluginInstance<any, any>[]>(
     basePath: string,
     plugins: TGroupPlugins,
     configure: (
@@ -84,7 +84,7 @@ export class Ohnana<
   ): this;
   group(
     basePath: string,
-    pluginsOrConfigure: readonly PluginInstance<any>[] | ((group: any) => void),
+    pluginsOrConfigure: readonly PluginInstance<any, any>[] | ((group: any) => void),
     maybeConfigure?: (group: any) => void
   ): this {
     // Determine if second arg is plugins array or configure function
@@ -100,7 +100,7 @@ export class Ohnana<
         plugin.hooks.onInit(subApp);
       }
       if (plugin.hooks.onRequest) {
-        subApp.use('*', plugin.hooks.onRequest as any);
+        subApp.use('*', plugin.hooks.onRequest);
       }
     }
     
@@ -204,14 +204,14 @@ export class Ohnana<
       }
 
       if (plugin.hooks.onRequest) {
-        this.use("*", plugin.hooks.onRequest as any);
+        this.use("*", plugin.hooks.onRequest);
       }
     }
 
     if (this.plugins.some((p) => p.hooks.onError)) {
       this.onError((err, c) => {
         for (const plugin of this.plugins) {
-          const result = plugin.hooks?.onError?.(err, c as any);
+          const result = plugin.hooks?.onError?.(err, c);
           if (result) return result;
         }
         throw err;
@@ -249,7 +249,7 @@ export class Ohnana<
 }
 
 export function ohnana<
-  const TPlugins extends readonly PluginInstance<any>[],
+  const TPlugins extends readonly PluginInstance<any, any>[],
   const TServices extends readonly ServiceInstance<any>[] = readonly []
 >(
   config: OhnanaConfig<TPlugins, TServices>
