@@ -37,13 +37,13 @@ export function openapi(config: OpenAPIConfig): PluginInstance<{}> {
     _context: {},
     hooks: {
       onInit: (app) => {
-        app.get(specPath, (c: any) => {
+        app.get(specPath, (c: Context) => {
           return c.json(config.spec, 200, {
             'Content-Type': 'application/json',
           })
         })
         
-        app.get(docsPath, (c: any) => {
+        app.get(docsPath, (c: Context) => {
           const html = `<!doctype html>
 <html>
   <head>

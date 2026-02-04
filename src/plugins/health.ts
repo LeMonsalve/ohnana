@@ -1,3 +1,4 @@
+import type { Context } from 'hono'
 import type { PluginInstance } from '../types'
 
 export type HealthCheck = () => Promise<boolean> | boolean
@@ -17,7 +18,7 @@ export function health(config?: HealthConfig): PluginInstance<{}> {
     _context: {},
     hooks: {
       onInit: (app) => {
-        app.get(path, async (c: any) => {
+        app.get(path, async (c: Context) => {
           const results: Record<string, 'ok' | 'fail'> = {}
           let healthy = true
           

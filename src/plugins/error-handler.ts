@@ -1,3 +1,4 @@
+import type { Context } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { definePlugin } from '../toolkit'
 import { ErrorCodes } from '../types'
@@ -17,7 +18,7 @@ function getErrorCode(status: number): string {
 }
 
 // Helper to safely get optional context values
-function tryGet<T>(c: any, key: string): T | undefined {
+function tryGet<T>(c: Context, key: string): T | undefined {
   try {
     return c.get(key)
   } catch {
@@ -48,7 +49,7 @@ export const errorHandler = definePlugin({
   },
   
   onInit: (app) => {
-    app.notFound((c: any) => {
+    app.notFound((c: Context) => {
       const requestId = tryGet<string>(c, 'requestId')
       return c.json({
         message: 'Not Found',
