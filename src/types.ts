@@ -110,8 +110,12 @@ export interface PluginInstance<TContext extends Record<string, unknown> = {}> {
 /**
  * Ohnana config - constructor options
  */
-export interface OhnanaConfig<TPlugins extends readonly PluginInstance<any>[] = readonly []> {
+export interface OhnanaConfig<
+  TPlugins extends readonly PluginInstance<any>[] = readonly [],
+  TServices extends readonly ServiceInstance<any>[] = readonly []
+> {
   plugins?: TPlugins;
+  services?: TServices;
   basePath?: string;
 }
 

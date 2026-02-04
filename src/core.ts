@@ -1,6 +1,7 @@
 import { Hono } from "hono";
-import type { OhnanaConfig, PluginInstance, InferContext, WebSocketData } from "./types";
+import type { OhnanaConfig, PluginInstance, InferContext, WebSocketData, ServiceInstance } from "./types";
 import { printStartup } from "./banner";
+import { ServiceContainer } from "./service-container";
 
 export interface ServeOptions {
   port: number;
@@ -26,20 +27,28 @@ const colors = {
   dim: '\x1b[2m',
 }
 
-export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly []> extends Hono<{
+export class Ohnana<
+  TPlugins extends readonly PluginInstance<any>[] = readonly [],
+  TServices extends readonly ServiceInstance<any>[] = readonly []
+> extends Hono<{
   Variables: InferContext<TPlugins>;
 }> {
   private plugins: readonly PluginInstance<any>[];
+  private services: readonly ServiceInstance<any>[];
+  private serviceContainer: ServiceContainer;
   private readonly startTime: number;
 
-  constructor(config: OhnanaConfig<TPlugins>) {
+  constructor(config: OhnanaConfig<TPlugins, TServices>) {
     super(config.basePath ? { strict: false } : undefined);
 
     this.startTime = Date.now();
     this.plugins = config.plugins || ([] as const);
+    this.services = config.services || ([] as const);
+    this.serviceContainer = new ServiceContainer();
 
     this.validateDependencies();
     this.registerPlugins();
+    this.registerServices();
   }
 
   get pluginCount(): number {
@@ -147,6 +156,8 @@ export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly [
       
       server.stop();
       
+      await this.serviceContainer.shutdown();
+      
       const reversedPlugins = [...this.plugins].reverse();
       for (const plugin of reversedPlugins) {
         if (plugin.hooks.onShutdown) {
@@ -207,10 +218,41 @@ export class Ohnana<TPlugins extends readonly PluginInstance<any>[] = readonly [
       });
     }
   }
+
+  private registerServices(): void {
+    for (const service of this.services) {
+      this.serviceContainer.register(service);
+    }
+
+    const pluginIds = new Set(this.plugins.map(p => p.id));
+    this.serviceContainer.validateDependencies(pluginIds);
+
+    const pluginContext: Record<string, unknown> = {};
+    for (const plugin of this.plugins) {
+      if (plugin.instance !== undefined) {
+        pluginContext[plugin.id] = plugin.instance;
+      }
+    }
+
+    this.serviceContainer.initialize(pluginContext).catch(err => {
+      console.error('Service initialization failed:', err);
+      throw err;
+    });
+
+    this.use('*', async (c, next) => {
+      (c as any).service = <T>(id: string): T => {
+        return this.serviceContainer.get<T>(id);
+      };
+      await next();
+    });
+  }
 }
 
-export function ohnana<const TPlugins extends readonly PluginInstance<any>[]>(
-  config: OhnanaConfig<TPlugins>
-): Ohnana<TPlugins> {
+export function ohnana<
+  const TPlugins extends readonly PluginInstance<any>[],
+  const TServices extends readonly ServiceInstance<any>[] = readonly []
+>(
+  config: OhnanaConfig<TPlugins, TServices>
+): Ohnana<TPlugins, TServices> {
   return new Ohnana(config);
 }
