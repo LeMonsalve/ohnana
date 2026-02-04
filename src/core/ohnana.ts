@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import type { OhnanaConfig, PluginInstance, InferContext, InferServiceContext, WebSocketData, ServiceInstance } from "./types";
+import type { OhnanaConfig, PluginInstance, InferContext, InferServiceContext, WebSocketData, ServiceInstance } from "../types";
 import { printStartup } from "./banner";
 import { ServiceContainer } from "./service-container";
 
@@ -17,7 +17,7 @@ export interface ServeOptions {
   };
 }
 
-import { colors, prefix, createLogger } from "./utils";
+import { colors, prefix, createLogger } from "../utils";
 
 const logger = createLogger({ format: 'pretty' });
 

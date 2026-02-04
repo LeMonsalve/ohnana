@@ -1,5 +1,5 @@
-import { colors } from "./utils/colors";
-import pkg from "../package.json";
+import { colors } from "../utils/colors";
+import pkg from "../../package.json";
 
 const BANNER = `
 ${colors.magenta}   ____  _

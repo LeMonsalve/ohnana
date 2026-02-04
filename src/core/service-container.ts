@@ -1,5 +1,5 @@
-import type { ServiceInstance } from './types'
-import { createLogger } from './utils/logger'
+import type { ServiceInstance } from '../types'
+import { createLogger } from '../utils/logger'
 
 const logger = createLogger()
 

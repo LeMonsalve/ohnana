@@ -14,6 +14,6 @@ export type {
   InferServiceContext 
 } from './types'
 export { ErrorCodes } from './types'
-export { env } from './env'
-export { printStartup } from './banner'
-export type { StartupInfo } from './banner'
+export { env } from './core'
+export { printStartup } from './core'
+export type { StartupInfo } from './core'

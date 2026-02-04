@@ -1,7 +1,7 @@
 import { test, expect } from "bun:test";
 import { ohnana } from "../core";
 import { defineService } from "../toolkit/define-service";
-import { ServiceContainer } from "../service-container";
+import { ServiceContainer } from "../core/service-container";
 
 test("defineService returns ServiceFactory", () => {
   const testService = defineService({
