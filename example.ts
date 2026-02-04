@@ -155,9 +155,11 @@ app.get('/', (c) => {
   })
 })
 
-app.post('/users', validator({ body: userSchema }), (c) => {
-  const body = (c as any).get('validatedBody')
-  return c.json({ success: true, user: body })
+app.group('/validated', [validator({ body: userSchema })] as const, (group) => {
+  group.post('/users', (c) => {
+    const body = c.get('validatedBody')
+    return c.json({ success: true, user: body })
+  })
 })
 
 app.get('/slow', async (c) => {
