@@ -1,4 +1,7 @@
 import type { ServiceInstance } from './types'
+import { createLogger } from './utils/logger'
+
+const logger = createLogger()
 
 export class ServiceContainer {
   private services = new Map<string, any>()
@@ -111,7 +114,7 @@ export class ServiceContainer {
         try {
           await instance.definition.onShutdown()
         } catch (err) {
-          console.error(`Service "${id}" shutdown failed:`, err)
+          logger.error(`Service "${id}" shutdown failed`, { error: err })
         }
       }
     }

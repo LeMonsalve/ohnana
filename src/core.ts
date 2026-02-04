@@ -19,7 +19,9 @@ export interface ServeOptions {
   };
 }
 
-import { colors, prefix } from "./utils/colors";
+import { colors, prefix, createLogger } from "./utils";
+
+const logger = createLogger({ format: 'pretty' });
 
 export class Ohnana<
   TPlugins extends readonly PluginInstance<any, any>[] = readonly [],
@@ -146,7 +148,7 @@ export class Ohnana<
 
     // Graceful shutdown handler
     const shutdown = async (signal: string) => {
-      console.log(`\n${prefix()} ${colors.yellow}${signal}${colors.reset} received, shutting down...`);
+      logger.warn(`\n${prefix()} ${colors.yellow}${signal}${colors.reset} received, shutting down...`);
       
       server.stop();
       
@@ -157,14 +159,14 @@ export class Ohnana<
         if (plugin.hooks.onShutdown) {
           try {
             await plugin.hooks.onShutdown();
-            console.log(`${prefix()} ${colors.dim}↳ ${plugin.id} cleaned up${colors.reset}`);
+            logger.info(`${prefix()} ${colors.dim}↳ ${plugin.id} cleaned up${colors.reset}`);
           } catch (err) {
-            console.error(`${prefix()} ${colors.yellow}↳ ${plugin.id} cleanup failed:${colors.reset}`, err);
+            logger.error(`${prefix()} ${colors.yellow}↳ ${plugin.id} cleanup failed:${colors.reset}`, { error: err });
           }
         }
       }
       
-      console.log(`${prefix()} ${colors.green}Goodbye!${colors.reset}\n`);
+      logger.info(`${prefix()} ${colors.green}Goodbye!${colors.reset}\n`);
       process.exit(0);
     };
 
@@ -229,7 +231,7 @@ export class Ohnana<
     }
 
     this.serviceContainer.initialize(pluginContext).catch(err => {
-      console.error('Service initialization failed:', err);
+      logger.error('Service initialization failed', { error: err });
       throw err;
     });
 

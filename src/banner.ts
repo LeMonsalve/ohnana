@@ -1,4 +1,6 @@
-import { colors } from './utils/colors'
+import { colors, createLogger } from './utils'
+
+const logger = createLogger({ format: 'pretty' })
 
 const BANNER = `
 ${colors.magenta}   ____  _                            
@@ -16,15 +18,15 @@ export interface StartupInfo {
 
 export function printStartup(info: StartupInfo): void {
   console.log(BANNER)
-  console.log(`  ${colors.green}🚀 Server running on${colors.reset} ${colors.cyan}http://localhost:${info.port}${colors.reset}`)
+  logger.info(`${colors.green}🚀 Server running on${colors.reset} ${colors.cyan}http://localhost:${info.port}${colors.reset}`)
   
   if (info.pluginCount !== undefined) {
-    console.log(`  ${colors.green}📦 ${info.pluginCount} plugins loaded${colors.reset}`)
+    logger.info(`${colors.green}📦 ${info.pluginCount} plugins loaded${colors.reset}`)
   }
   
   if (info.startTime !== undefined) {
     const elapsed = Date.now() - info.startTime
-    console.log(`  ${colors.green}⚡ Ready in${colors.reset} ${colors.dim}${elapsed}ms${colors.reset}`)
+    logger.info(`${colors.green}⚡ Ready in${colors.reset} ${colors.dim}${elapsed}ms${colors.reset}`)
   }
   
   console.log()
