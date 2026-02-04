@@ -34,5 +34,8 @@ export type { QueueConfig } from './queue'
 export { drizzle } from './drizzle'
 export type { DrizzleConfig } from './drizzle'
 
+export { websocket, getWebSocketServer } from './websocket'
+export type { WebSocketConfig } from './websocket'
+
 export { globalLogger, createLogger } from './logger'
 export type { Logger } from './logger'
