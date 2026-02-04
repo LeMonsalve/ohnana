@@ -1,8 +1,8 @@
 import { test, expect, describe } from 'bun:test'
-import { ohnana } from './index'
-import { definePlugin } from './toolkit'
-import { requestId, logger } from './plugins'
-import { createTestClient } from './testing'
+import { ohnana } from '../index'
+import { definePlugin } from '../toolkit'
+import { requestId, logger } from '../plugins'
+import { createTestClient } from '../testing'
 
 // Auth plugin for testing route groups
 const auth = definePlugin({
