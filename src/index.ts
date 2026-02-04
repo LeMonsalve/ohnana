@@ -1,6 +1,17 @@
 export { Ohnana, ohnana } from './core'
 export type { ServeOptions } from './core'
-export type { OhnanaConfig, PluginInstance, PluginDefinition, PluginHooks, ErrorResponse, InferContext } from './types'
+export type { 
+  OhnanaConfig, 
+  PluginInstance, 
+  PluginDefinition, 
+  PluginHooks, 
+  ServiceInstance,
+  ServiceDefinition,
+  ServiceFactory,
+  ErrorResponse, 
+  InferContext,
+  InferServiceContext 
+} from './types'
 export { ErrorCodes } from './types'
 export { env } from './env'
 export { printStartup } from './banner'
