@@ -1,17 +1,13 @@
+import type { Context } from 'hono'
 import { definePlugin } from '../toolkit'
-import { requestId } from './request-id'
+import { colors, prefix as getPrefix } from '../utils/colors'
 
-const colors = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  dim: '\x1b[2m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  red: '\x1b[31m',
-  white: '\x1b[37m',
-  gray: '\x1b[90m',
+function tryGet<T>(c: Context, key: string): T | undefined {
+  try {
+    return c.get(key)
+  } catch {
+    return undefined
+  }
 }
 
 const methodColors: Record<string, string> = {
@@ -49,9 +45,7 @@ function formatMs(ms: number): string {
   return `${colors.dim}${ms.toString().padStart(4)}ms${colors.reset}`
 }
 
-function prefix(): string {
-  return `${colors.magenta}[Ohnana]${colors.reset}`
-}
+
 
 export interface Logger {
   debug(message: string, meta?: Record<string, unknown>): void
@@ -86,11 +80,10 @@ export interface LoggerConfig {
 
 export const logger = definePlugin({
   id: 'logger',
-  requires: [requestId],
   context: {} as { logger: Logger },
 
   onRequest: async (c, next) => {
-    const reqId = c.get('requestId')
+    const reqId = tryGet<string>(c, 'requestId')
     c.set('logger', createLogger(reqId))
     
     const start = Date.now()
@@ -104,7 +97,7 @@ export const logger = definePlugin({
     const statusColor = getStatusColor(status)
 
     console.log(
-      `${prefix()} ${icon} ${formatMethod(method)} ${formatPath(path)} ${statusColor}${status}${colors.reset}  ${formatMs(ms)}`
+      `${getPrefix()} ${icon} ${formatMethod(method)} ${formatPath(path)} ${statusColor}${status}${colors.reset}  ${formatMs(ms)}`
     )
   },
 })
