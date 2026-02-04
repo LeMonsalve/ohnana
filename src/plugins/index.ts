@@ -38,3 +38,6 @@ export type { DrizzleConfig } from './drizzle'
 
 export { websocket, getWebSocketServer } from './websocket'
 export type { WebSocketConfig } from './websocket'
+
+export { events } from './events'
+export type { EventBus } from './events'
