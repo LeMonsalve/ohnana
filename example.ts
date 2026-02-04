@@ -12,7 +12,44 @@ import {
   websocket,
   globalLogger
 } from './src/plugins'
+import { defineService } from './src/toolkit'
 import { z } from 'zod'
+
+const emailService = defineService({
+  id: 'email',
+  onInit: async () => {
+    globalLogger.info('[EmailService] Initialized')
+  },
+  create: () => ({
+    send: (to: string, subject: string) => {
+      globalLogger.info(`[EmailService] Sending email to ${to}: ${subject}`)
+      return { sent: true, to, subject }
+    }
+  }),
+  onShutdown: async () => {
+    globalLogger.info('[EmailService] Shutdown')
+  }
+})
+
+const userService = defineService({
+  id: 'users',
+  dependencies: ['logger', 'email'] as const,
+  onInit: async (deps) => {
+    deps.logger.info('[UserService] Initialized with dependencies')
+  },
+  create: (deps) => ({
+    createUser: (name: string, email: string) => {
+      deps.logger.info(`[UserService] Creating user: ${name}`)
+      const user = { id: Math.random().toString(36), name, email }
+      deps.email.send(email, 'Welcome to Ohnana!')
+      return user
+    },
+    getUser: (id: string) => {
+      deps.logger.info(`[UserService] Getting user: ${id}`)
+      return { id, name: 'Example User', email: 'user@example.com' }
+    }
+  })
+})
 
 const apiSpec = {
   openapi: '3.0.0',
@@ -96,6 +133,10 @@ const app = ohnana({
     
     errorHandler(),
     cors()
+  ],
+  services: [
+    emailService(),
+    userService()
   ]
 })
 
@@ -126,6 +167,20 @@ app.get('/slow', async (c) => {
 
 app.get('/error', () => {
   throw new Error('Test error')
+})
+
+app.post('/api/users', async (c) => {
+  const body = await c.req.json() as { name: string; email: string }
+  const users = (c as any).service('users')
+  const user = users.createUser(body.name, body.email)
+  return c.json({ success: true, user })
+})
+
+app.get('/api/users/:id', (c) => {
+  const id = c.req.param('id')
+  const users = (c as any).service('users')
+  const user = users.getUser(id)
+  return c.json(user)
 })
 
 // Broadcast to WebSocket clients from HTTP
