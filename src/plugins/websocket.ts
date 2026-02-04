@@ -1,5 +1,6 @@
 import type { ServerWebSocket } from 'bun'
 import type { PluginInstance, WebSocketConfig, WebSocketClient, WebSocketServer, WebSocketMessage, WebSocketData } from '../types'
+import { globalLogger } from './logger'
 
 /**
  * Internal state for WebSocket server
@@ -260,7 +261,7 @@ export function websocket(config: WebSocketConfig = {}): PluginInstance<{ ws: We
           wsServer.broadcastAll({ action: 'shutdown' })
           wsServer = null
         }
-        console.log('[WebSocket] All connections closed')
+        globalLogger.info('[WebSocket] All connections closed')
       }
     }
   }

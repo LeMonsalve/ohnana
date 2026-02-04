@@ -1,4 +1,5 @@
 import type { PluginInstance } from '../types'
+import { globalLogger } from './logger'
 
 export interface QueueConfig {
   name: string
@@ -20,7 +21,7 @@ export function queue(config: QueueConfig): PluginInstance<{ queue: any }> {
             isWorker: config.isWorker ?? false
           })
         } catch (err) {
-          console.warn('[Queue] bee-queue not installed. Run: bun add bee-queue')
+          globalLogger.warn('[Queue] bee-queue not installed. Run: bun add bee-queue')
           queueInstance = null
         }
       },
@@ -35,7 +36,7 @@ export function queue(config: QueueConfig): PluginInstance<{ queue: any }> {
       onShutdown: async () => {
         if (queueInstance) {
           await queueInstance.close()
-          console.log('[Queue] Connection closed')
+          globalLogger.info('[Queue] Connection closed')
         }
       }
     }

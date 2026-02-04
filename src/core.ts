@@ -19,13 +19,7 @@ export interface ServeOptions {
   };
 }
 
-const colors = {
-  reset: '\x1b[0m',
-  yellow: '\x1b[33m',
-  green: '\x1b[32m',
-  magenta: '\x1b[35m',
-  dim: '\x1b[2m',
-}
+import { colors, prefix } from "./utils/colors";
 
 export class Ohnana<
   TPlugins extends readonly PluginInstance<any, any>[] = readonly [],
@@ -152,7 +146,7 @@ export class Ohnana<
 
     // Graceful shutdown handler
     const shutdown = async (signal: string) => {
-      console.log(`\n${colors.magenta}[Ohnana]${colors.reset} ${colors.yellow}${signal}${colors.reset} received, shutting down...`);
+      console.log(`\n${prefix()} ${colors.yellow}${signal}${colors.reset} received, shutting down...`);
       
       server.stop();
       
@@ -163,14 +157,14 @@ export class Ohnana<
         if (plugin.hooks.onShutdown) {
           try {
             await plugin.hooks.onShutdown();
-            console.log(`${colors.magenta}[Ohnana]${colors.reset} ${colors.dim}↳ ${plugin.id} cleaned up${colors.reset}`);
+            console.log(`${prefix()} ${colors.dim}↳ ${plugin.id} cleaned up${colors.reset}`);
           } catch (err) {
-            console.error(`${colors.magenta}[Ohnana]${colors.reset} ${colors.yellow}↳ ${plugin.id} cleanup failed:${colors.reset}`, err);
+            console.error(`${prefix()} ${colors.yellow}↳ ${plugin.id} cleanup failed:${colors.reset}`, err);
           }
         }
       }
       
-      console.log(`${colors.magenta}[Ohnana]${colors.reset} ${colors.green}Goodbye!${colors.reset}\n`);
+      console.log(`${prefix()} ${colors.green}Goodbye!${colors.reset}\n`);
       process.exit(0);
     };
 

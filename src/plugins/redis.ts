@@ -1,4 +1,5 @@
 import { definePlugin } from '../toolkit'
+import { globalLogger } from './logger'
 
 export interface RedisConfig {
   url?: string
@@ -14,7 +15,7 @@ const redisPlugin = definePlugin({
   },
   
   onShutdown: async () => {
-    console.log('[Redis] Connection closed')
+    globalLogger.info('[Redis] Connection closed')
   }
 })
 
