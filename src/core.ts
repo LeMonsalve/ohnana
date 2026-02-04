@@ -5,16 +5,14 @@ import { ServiceContainer } from "./service-container";
 
 export interface ServeOptions {
   port: number;
-  /** WebSocket configuration (optional) */
+  development?: boolean;
   websocket?: {
-    /** WebSocket handlers from Bun */
     handlers: {
       open?: (ws: any) => void;
       message?: (ws: any, message: string | Buffer) => void;
       close?: (ws: any) => void;
       error?: (ws: any, error: Error) => void;
     };
-    /** Path to upgrade to WebSocket (default: '/ws') */
     path?: string;
   };
 }
@@ -114,6 +112,7 @@ export class Ohnana<
       port: options.port,
       pluginCount: this.pluginCount,
       startTime: this.startTime,
+      isDev: options.development ?? process.env.NODE_ENV !== "production",
     });
 
     // Check for WebSocket config from plugin or serve options
