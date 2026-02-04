@@ -10,6 +10,7 @@ export function drizzle<TDb>(
   return {
     id: 'drizzle',
     _context: {} as { db: TDb },
+    instance: config.db,
     hooks: {
       onRequest: async (c, next) => {
         (c as any).set('db', config.db)

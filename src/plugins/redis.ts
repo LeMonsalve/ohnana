@@ -4,7 +4,7 @@ export interface RedisConfig {
   url?: string
 }
 
-export const redis = definePlugin({
+const redisPlugin = definePlugin({
   id: 'redis',
   context: {} as { redis: typeof Bun.redis },
   
@@ -17,3 +17,11 @@ export const redis = definePlugin({
     console.log('[Redis] Connection closed')
   }
 })
+
+export const redis = (config?: RedisConfig) => {
+  const plugin = redisPlugin(config)
+  return {
+    ...plugin,
+    instance: Bun.redis
+  }
+}

@@ -102,8 +102,9 @@ export interface PluginDefinition<
 export interface PluginInstance<TContext extends Record<string, unknown> = {}> {
   id: string;
   _context: TContext;
-  _requires?: readonly string[];  // Store required plugin IDs for runtime validation
+  _requires?: readonly string[];
   hooks: PluginHooks<TContext, any>;
+  instance?: unknown;
 }
 
 /**
