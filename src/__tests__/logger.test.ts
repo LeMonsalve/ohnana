@@ -89,26 +89,23 @@ describe('Logger Plugin', () => {
     })
   })
 
-  describe('GlobalLogger', () => {
-    test('globalLogger is exported and callable', async () => {
-      const { globalLogger } = await import('../plugins/logger')
+  describe('Standalone Logger', () => {
+    test('createLogger is exported from plugins', async () => {
+      const { createLogger } = await import('../plugins')
       
-      expect(globalLogger).toBeDefined()
-      expect(typeof globalLogger.info).toBe('function')
-      expect(typeof globalLogger.debug).toBe('function')
-      expect(typeof globalLogger.warn).toBe('function')
-      expect(typeof globalLogger.error).toBe('function')
+      expect(createLogger).toBeDefined()
+      expect(typeof createLogger).toBe('function')
     })
 
-    test('globalLogger works outside request context', async () => {
-      const { globalLogger } = await import('../plugins/logger')
+    test('createLogger works outside request context', async () => {
+      const { createLogger } = await import('../plugins')
+      const logger = createLogger()
       
-      // Should not throw when called outside request
       expect(() => {
-        globalLogger.info('test message')
-        globalLogger.debug('debug message')
-        globalLogger.warn('warning message')
-        globalLogger.error('error message')
+        logger.info('test message')
+        logger.debug('debug message')
+        logger.warn('warning message')
+        logger.error('error message')
       }).not.toThrow()
     })
   })

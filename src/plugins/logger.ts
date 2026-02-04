@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import { definePlugin } from '../toolkit'
-import { colors, prefix as getPrefix } from '../utils/colors'
+import { colors, prefix as getPrefix, createLogger, type Logger } from '../utils'
 
 function tryGet<T>(c: Context, key: string): T | undefined {
   try {
@@ -45,35 +45,6 @@ function formatMs(ms: number): string {
   return `${colors.dim}${ms.toString().padStart(4)}ms${colors.reset}`
 }
 
-
-
-export interface Logger {
-  debug(message: string, meta?: Record<string, unknown>): void
-  info(message: string, meta?: Record<string, unknown>): void
-  warn(message: string, meta?: Record<string, unknown>): void
-  error(message: string, meta?: Record<string, unknown>): void
-}
-
-function createLogger(requestId?: string): Logger {
-  const log = (level: string, message: string, meta?: Record<string, unknown>) => {
-    const entry = {
-      level,
-      message,
-      ...(requestId && { requestId }),
-      ...meta,
-      timestamp: new Date().toISOString()
-    }
-    console.log(JSON.stringify(entry))
-  }
-  
-  return {
-    debug: (msg, meta) => log('debug', msg, meta),
-    info: (msg, meta) => log('info', msg, meta),
-    warn: (msg, meta) => log('warn', msg, meta),
-    error: (msg, meta) => log('error', msg, meta),
-  }
-}
-
 export interface LoggerConfig {
   skip?: (path: string) => boolean
 }
@@ -84,7 +55,16 @@ export const logger = definePlugin({
 
   onRequest: async (c, next) => {
     const reqId = tryGet<string>(c, 'requestId')
-    c.set('logger', createLogger(reqId))
+    const baseLogger = createLogger()
+    
+    const loggerWithRequestId: Logger = {
+      debug: (msg, meta) => baseLogger.debug(msg, { ...meta, ...(reqId && { requestId: reqId }) }),
+      info: (msg, meta) => baseLogger.info(msg, { ...meta, ...(reqId && { requestId: reqId }) }),
+      warn: (msg, meta) => baseLogger.warn(msg, { ...meta, ...(reqId && { requestId: reqId }) }),
+      error: (msg, meta) => baseLogger.error(msg, { ...meta, ...(reqId && { requestId: reqId }) }),
+    }
+    
+    c.set('logger', loggerWithRequestId)
     
     const start = Date.now()
     await next()
@@ -101,7 +81,3 @@ export const logger = definePlugin({
     )
   },
 })
-
-export { createLogger }
-
-export const globalLogger = createLogger()

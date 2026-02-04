@@ -3,6 +3,8 @@ export type { RequestIdConfig } from './request-id'
 
 export { logger } from './logger'
 export type { LoggerConfig } from './logger'
+export { createLogger } from '../utils/logger'
+export type { Logger } from '../utils/logger'
 
 export { cors } from './cors'
 export type { CorsConfig } from './cors'
@@ -36,6 +38,3 @@ export type { DrizzleConfig } from './drizzle'
 
 export { websocket, getWebSocketServer } from './websocket'
 export type { WebSocketConfig } from './websocket'
-
-export { globalLogger, createLogger } from './logger'
-export type { Logger } from './logger'
