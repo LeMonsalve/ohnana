@@ -8,7 +8,8 @@ export type {
   ServiceInstance,
   ServiceDefinition,
   ServiceFactory,
-  ErrorResponse, 
+  ErrorResponse,
+  ErrorContext,
   InferContext,
   InferServiceContext 
 } from './types'

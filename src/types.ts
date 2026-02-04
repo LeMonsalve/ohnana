@@ -1,6 +1,18 @@
 import type { Context, Next } from 'hono'
 
 /**
+ * Error context provided to onError hooks
+ */
+export interface ErrorContext {
+  /** ID of the plugin that threw the error (if identifiable) */
+  pluginId?: string
+  /** Stage where the error occurred */
+  stage: 'middleware' | 'handler' | 'response'
+  /** List of all registered plugin IDs */
+  pluginList: string[]
+}
+
+/**
  * A plugin factory function that creates plugin instances
  */
 export type PluginFactory<
@@ -50,7 +62,8 @@ export interface PluginHooks<
   /** Called when an error occurs */
   onError?: (
     error: Error, 
-    c: Context<{ Variables: TRequired & TContext }>
+    c: Context<{ Variables: TRequired & TContext }>,
+    context: ErrorContext
   ) => Response | void;
   
   /** Called when app is shutting down */
@@ -91,7 +104,8 @@ export interface PluginDefinition<
   /** Called on error */
   onError?: (
     error: Error, 
-    c: Context<{ Variables: CombineRequiredContexts<TRequires> & TContext }>
+    c: Context<{ Variables: CombineRequiredContexts<TRequires> & TContext }>,
+    context: ErrorContext
   ) => Response | void;
   
   /** Called on shutdown */

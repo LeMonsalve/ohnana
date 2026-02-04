@@ -203,14 +203,28 @@ export class Ohnana<
       }
 
       if (plugin.hooks.onRequest) {
-        this.use("*", plugin.hooks.onRequest);
+        this.use("*", async (c, next) => {
+          try {
+            await plugin.hooks.onRequest!(c, next);
+          } catch (err) {
+            (c as any)._errorPluginId = plugin.id;
+            (c as any)._errorStage = 'middleware';
+            throw err;
+          }
+        });
       }
     }
 
     if (this.plugins.some((p) => p.hooks.onError)) {
       this.onError((err, c) => {
+        const errorContext = {
+          pluginId: (c as any)._errorPluginId,
+          stage: (c as any)._errorStage || 'handler',
+          pluginList: this.plugins.map(p => p.id)
+        };
+        
         for (const plugin of this.plugins) {
-          const result = plugin.hooks?.onError?.(err, c);
+          const result = plugin.hooks?.onError?.(err, c, errorContext);
           if (result) return result;
         }
         throw err;
