@@ -131,7 +131,7 @@ export interface PluginInstance<
  */
 export interface OhnanaConfig<
   TPlugins extends readonly PluginInstance<any, any>[] = readonly [],
-  TServices extends readonly ServiceInstance<any>[] = readonly []
+  TServices extends readonly ServiceInstance<any, any>[] = readonly []
 > {
   plugins?: TPlugins;
   services?: TServices;
@@ -251,8 +251,8 @@ export interface WebSocketData {
 /**
  * A service factory function that creates service instances
  */
-export type ServiceFactory<TService = any> = 
-  (config?: any) => ServiceInstance<TService>
+export type ServiceFactory<TService = any, TId extends string = string> = 
+  (config?: any) => ServiceInstance<TService, TId>
 
 /**
  * Service definition - what defineService() accepts
@@ -280,11 +280,11 @@ export interface ServiceDefinition<
 /**
  * Service instance - what services return after registration
  */
-export interface ServiceInstance<TService = any> {
-  id: string
+export interface ServiceInstance<TService = any, TId extends string = string> {
+  id: TId
   _service: TService
   _dependencies?: readonly string[]
-  definition: ServiceDefinition<any, any, TService>
+  definition: ServiceDefinition<TId, any, TService>
 }
 
 /**
@@ -305,8 +305,8 @@ export type InferServiceDeps<
 /**
  * Infer combined service context from all services
  */
-export type InferServiceContext<TServices extends readonly ServiceInstance<any>[]> = 
+export type InferServiceContext<TServices extends readonly ServiceInstance<any, any>[]> = 
   TServices extends readonly [infer First, ...infer Rest]
-    ? (First extends ServiceInstance<infer S> ? { [K in First['id']]: S } : {}) & 
-      (Rest extends readonly ServiceInstance<any>[] ? InferServiceContext<Rest> : {})
+    ? (First extends ServiceInstance<infer S, infer Id extends string> ? { [K in Id]: S } : {}) & 
+      (Rest extends readonly ServiceInstance<any, any>[] ? InferServiceContext<Rest> : {})
     : {}

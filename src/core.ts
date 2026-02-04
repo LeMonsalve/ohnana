@@ -23,7 +23,7 @@ const logger = createLogger({ format: 'pretty' });
 
 export class Ohnana<
   TPlugins extends readonly PluginInstance<any, any>[] = readonly [],
-  TServices extends readonly ServiceInstance<any>[] = readonly []
+  TServices extends readonly ServiceInstance<any, any>[] = readonly []
 > extends Hono<{
   Variables: InferContext<TPlugins> & {
     service: <K extends keyof InferServiceContext<TServices>>(
@@ -32,7 +32,7 @@ export class Ohnana<
   };
 }> {
   private plugins: readonly PluginInstance<any, any>[];
-  private services: readonly ServiceInstance<any>[];
+  private services: readonly ServiceInstance<any, any>[];
   private serviceContainer: ServiceContainer;
   private readonly startTime: number;
 
@@ -263,7 +263,7 @@ export class Ohnana<
 
 export function ohnana<
   const TPlugins extends readonly PluginInstance<any, any>[],
-  const TServices extends readonly ServiceInstance<any>[] = readonly []
+  const TServices extends readonly ServiceInstance<any, any>[] = readonly []
 >(
   config: OhnanaConfig<TPlugins, TServices>
 ): Ohnana<TPlugins, TServices> {

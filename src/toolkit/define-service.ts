@@ -6,7 +6,7 @@ export function defineService<
   TService = any
 >(
   definition: ServiceDefinition<TId, TDeps, TService>
-): ServiceFactory<TService> {
+): ServiceFactory<TService, TId> {
   return (config?: any) => ({
     id: definition.id,
     _service: {} as TService,
@@ -15,5 +15,5 @@ export function defineService<
       ...definition,
       create: (deps: any) => definition.create(deps),
     },
-  } as ServiceInstance<TService>)
+  } as ServiceInstance<TService, TId>)
 }
