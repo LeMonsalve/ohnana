@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import type { OhnanaConfig, PluginInstance, InferContext, WebSocketData, ServiceInstance } from "./types";
+import type { OhnanaConfig, PluginInstance, InferContext, InferServiceContext, WebSocketData, ServiceInstance } from "./types";
 import { printStartup } from "./banner";
 import { ServiceContainer } from "./service-container";
 
@@ -25,7 +25,11 @@ export class Ohnana<
   TPlugins extends readonly PluginInstance<any, any>[] = readonly [],
   TServices extends readonly ServiceInstance<any>[] = readonly []
 > extends Hono<{
-  Variables: InferContext<TPlugins>;
+  Variables: InferContext<TPlugins> & {
+    service: <K extends keyof InferServiceContext<TServices>>(
+      id: K
+    ) => InferServiceContext<TServices>[K];
+  };
 }> {
   private plugins: readonly PluginInstance<any, any>[];
   private services: readonly ServiceInstance<any>[];
@@ -235,9 +239,9 @@ export class Ohnana<
     });
 
     this.use('*', async (c, next) => {
-      (c as any).service = <T>(id: string): T => {
-        return this.serviceContainer.get<T>(id);
-      };
+      c.set('service', (<K extends keyof InferServiceContext<TServices>>(id: K) => {
+        return this.serviceContainer.get(id as string) as InferServiceContext<TServices>[K];
+      }) as any);
       await next();
     });
   }

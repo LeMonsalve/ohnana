@@ -171,14 +171,14 @@ app.get('/error', () => {
 
 app.post('/api/users', async (c) => {
   const body = await c.req.json() as { name: string; email: string }
-  const users = (c as any).service('users')
+  const users = c.get('service')('users')
   const user = users.createUser(body.name, body.email)
   return c.json({ success: true, user })
 })
 
 app.get('/api/users/:id', (c) => {
   const id = c.req.param('id')
-  const users = (c as any).service('users')
+  const users = c.get('service')('users')
   const user = users.getUser(id)
   return c.json(user)
 })

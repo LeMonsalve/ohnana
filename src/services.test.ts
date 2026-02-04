@@ -182,7 +182,7 @@ test("c.service() returns typed service instance", async () => {
   });
 
   app.get("/test", (c) => {
-    const service = (c as any).service("test");
+    const service = c.get('service')("test");
     return c.json({ value: service.getValue() });
   });
 
